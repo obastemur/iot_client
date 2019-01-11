@@ -16,10 +16,6 @@
 *.dylib
 *.dll
 
-# Fortran module files
-*.mod
-*.smod
-
 # Compiled Static libraries
 *.lai
 *.la
@@ -30,3 +26,18 @@
 *.exe
 *.out
 *.app
+
+# Python
+exp.py
+.pytest_cache/
+__pycache__
+*.pyc
+*.pyo
+
+# VSCODE
+.vscode/
+
+# Testing
+e2e-device.js
+config.json
+auth.json
