@@ -46,3 +46,5 @@ auth.json
 iotc.egg-info
 python/build
 python/dist
+
+.DS_Store
