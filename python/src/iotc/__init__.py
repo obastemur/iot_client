@@ -287,10 +287,6 @@ class Device:
     self._sslVerificiationIsEnabled = is_enabled
     return 0
 
-  def setProtocol(self, protocol):
-    LOG_IOTC("ERROR: Python client currently only supports MQTT")
-    return 1
-
   def setModelData(self, data):
     LOG_IOTC("- iotc :: setModelData :: " + data, IOTLogLevel.IOTC_LOGGING_ALL)
     if self._auth_response_received:
