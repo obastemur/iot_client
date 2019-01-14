@@ -226,7 +226,7 @@ def MAKE_CALLBACK(client, eventName, payload, tag, status, msgid = None):
     return cb
   return 0
 
-def _quote(a,b):
+def _quote(a, b):
   global gIsMicroPython
   features = dir(urllib)
   if gIsMicroPython == False and int(sys.version[0]) < 3:
@@ -244,7 +244,7 @@ def _get_cert_path():
 def _request(device, target_url, method, body, headers):
   content = None
   if http != None:
-    response, content = http.Http(disable_ssl_certificate_validation=not device._sslVerificiationIsEnabled).request(
+    response, content = http.Http().request(
         target_url,
         method,
         body,
