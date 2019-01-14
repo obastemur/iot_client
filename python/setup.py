@@ -31,5 +31,6 @@ setuptools.setup(
       'Programming Language :: Python :: Implementation :: CPython',
       'Programming Language :: Python :: Implementation :: PyPy'
     ],
+    include_package_data=True,
     install_requires=["paho-mqtt", "httplib2"]
 )
