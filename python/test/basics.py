@@ -5,8 +5,9 @@ import os
 import sys
 
 file_path = __file__[:len(__file__) - len("basics.py")]
-file_path = file_path[:len(file_path) - 1] if file_path[len(file_path) - 1:] == "b" else file_path
-sys.path.append(os.path.join(file_path, "..", "src"))
+# Update /usr/local/lib/python2.7/site-packages/iotc/__init__.py ?
+# file_path = file_path[:len(file_path) - 1] if file_path[len(file_path) - 1:] == "b" else file_path
+# sys.path.append(os.path.join(file_path, "..", "src"))
 sys.dont_write_bytecode = True
 
 import iotc
@@ -37,7 +38,7 @@ def test_MAKE_CALLBACK():
   assert ret.getResponseMessage() == "DONE"
 
 def test_quote():
-  assert iotc._quote("abc+\\0123'\"?%456@def", '~()*!.\'') == "abc%2B%5C0123'%22%3F%25456%40def"
+  assert iotc._quote("abc+\\0123\"?%456@def", '~()*!.') == "abc%2B%5C0123%22%3F%25456%40def"
 
 with open(os.path.join(file_path, "config.json"), "r") as fh:
   configText = fh.read()
@@ -94,4 +95,7 @@ def test_lifetime():
     device.doNext()
 
 if pytest_run == False:
+  test_LOG_IOTC()
+  test_MAKE_CALLBACK()
+  test_quote()
   test_lifetime()
