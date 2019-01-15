@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 # Licensed under the MIT license.
 
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 __name__    = "iotc"
 
 import sys
@@ -337,7 +337,15 @@ class Device:
     target = urlparse(uri)
 
     content = _request(self, target.geturl(), "GET", None, headers)
-    data = json.loads(content)
+    try:
+      data = json.loads(content.decode("utf-8"))
+    except:
+      try:
+        data = json.loads(content)
+      except Exception as e:
+        err = "ERROR: %s => %s", (str(e), content)
+        LOG_IOTC(err)
+        return self._mqttConnect(err, None)
 
     if data != None and 'status' in data:
       if data['status'] == 'assigning':
@@ -367,10 +375,11 @@ class Device:
   def _echoDesired(self, msg, topic):
     LOG_IOTC("- iotc :: _echoDesired :: " + topic, IOTLogLevel.IOTC_LOGGING_ALL)
     obj = None
+
     try:
       obj = json.loads(msg)
-    except:
-      LOG_IOTC("ERROR: JSON parse for SettingsUpdated message object has failed. => " + msg)
+    except Exception as e:
+      LOG_IOTC("ERROR: JSON parse for SettingsUpdated message object has failed. => " + msg + " => " + str(e))
       return
 
     version = None
@@ -407,10 +416,16 @@ class Device:
       return
 
     if data.payload != None:
-      msg = str(data.payload)
+      try:
+        msg = data.payload.decode("utf-8")
+      except:
+        msg = str(data.payload)
 
     if data.topic != None:
-      topic = str(data.topic)
+      try:
+        topic = data.topic.decode("utf-8")
+      except:
+        topic = str(data.topic)
 
     if topic.startswith('$iothub/'): # twin
       # DO NOT need to echo twin response since IOTC api takes care of the desired messages internally
@@ -541,11 +556,14 @@ class Device:
     content = _request(self, target.geturl(), "PUT", body, headers)
     data = None
     try:
-      data = json.loads(content)
+      data = json.loads(content.decode("utf-8"))
     except:
-      err = "ERROR: non JSON is received from %s => %s", (self._dpsEndPoint, content)
-      LOG_IOTC(err)
-      return self._mqttConnect(err, None)
+      try:
+        data = json.loads(content)
+      except Exception as e:
+        err = "ERROR: non JSON is received from %s => %s .. message : %s", (self._dpsEndPoint, content, str(e))
+        LOG_IOTC(err)
+        return self._mqttConnect(err, None)
 
     if 'errorCode' in data:
       err = "DPS => " + str(data)

@@ -1,9 +1,16 @@
 ### 0.1.5
 
-- Add baltimore.pem into pypi packaging
-- Fix README - pypi package name
+- add baltimore.pem into pypi packaging
+- fix README - pypi package name
 - Enable: verify server certificate
 - remove setProtocol (won't support)
 - clean up error codes
 - remove redundant loop on paho
 - parse command name for user
+
+### 0.1.6
+
+- Support Python 3.4+
+- make sure json parse input is string
+- add more detail to json.parse failure messages
+- use decode encoding instead of str for mqtt events
