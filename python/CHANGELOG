@@ -1,0 +1,9 @@
+### 0.1.5
+
+- Add baltimore.pem into pypi packaging
+- Fix README - pypi package name
+- Enable: verify server certificate
+- remove setProtocol (won't support)
+- clean up error codes
+- remove redundant loop on paho
+- parse command name for user
