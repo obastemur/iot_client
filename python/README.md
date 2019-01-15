@@ -194,19 +194,24 @@ mkey = "DEVICE_KEY"
 iotc = iotc.Device(scopeId, mkey, deviceId, IOTConnectType.IOTC_CONNECT_SYMM_KEY)
 iotc.setLogLevel(IOTLogLevel.IOTC_LOGGING_API_ONLY)
 
+gCanSend = False
+gCounter = 0
+
 def onconnect(info):
+  global gCanSend
+  print("- [onconnect] => status:" + str(info.getStatusCode()))
   if info.getStatusCode() == 0:
-    print("Sending telemetry - 22")
-    iotc.sendTelemetry("{\"temp\":22}")
+     if iotc.isConnected():
+       gCanSend = True
 
 def onmessagesent(info):
-  print("message sent -> " + info.getPayload())
+  print("\t- [onmessagesent] => " + str(info.getPayload()))
 
 def oncommand(info):
-  print("command -> " + info.getPayload())
+  print("- [oncommand] => command name(" + info.getTag() + ") => " + str(info.getPayload()))
 
 def onsettingsupdated(info):
-  print("settings -> " + info.getTag() + " = " + info.getPayload())
+  print("- [onsettingsupdated] => settings name(" + info.getTag() + ") => " + info.getPayload())
 
 iotc.on("ConnectionStatus", onconnect)
 iotc.on("MessageSent", onmessagesent)
@@ -217,4 +222,11 @@ iotc.connect()
 
 while iotc.isConnected():
   iotc.doNext() # do the async work needed to be done for MQTT
+  if gCanSend == True:
+    if gCounter % 20 == 0:
+      gCounter = 0
+      print("Sending telemetry..")
+      iotc.sendTelemetry("{\"temp\": " + str(randint(20, 45)) + "}")
+
+    gCounter += 1
 ```
