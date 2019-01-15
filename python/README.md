@@ -1,4 +1,4 @@
-## Azure IoT - Python (light) device SDK Documentation
+## iotc - Azure IoT - Python (light) device SDK Documentation
 
 ### Prerequisites
 
@@ -10,7 +10,7 @@ Python 2.7+ or Python 3.6+ or Micropython 1.9+
 
 Python 2/3
 ```
-pip install iotc-device
+pip install iotc
 ```
 
 ### Usage

@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 # Licensed under the MIT license.
 
-__version__ = "0.1.0"
+__version__ = "0.1.5"
 __name__    = "iotc"
 
 import sys
@@ -313,7 +313,7 @@ class Device:
   def setLogLevel(self, logLevel):
     global gLOG_LEVEL
     if logLevel < IOTLogLevel.IOTC_LOGGING_DISABLED or logLevel > IOTLogLevel.IOTC_LOGGING_ALL:
-      LOG_IOTC("ERROR: (setLogLevel) invalid argument. ERROR:0x0001")
+      LOG_IOTC("ERROR: (setLogLevel) invalid argument.")
       return 1
     gLOG_LEVEL = logLevel
     return 0
@@ -399,7 +399,7 @@ class Device:
         self.sendProperty(msg)
 
   def _on_message(self, client, _, data):
-    LOG_IOTC("- iotc :: _on_message :: " + data, IOTLogLevel.IOTC_LOGGING_ALL)
+    LOG_IOTC("- iotc :: _on_message :: " + str(data), IOTLogLevel.IOTC_LOGGING_ALL)
     topic = ""
     msg = None
     if data == None:
@@ -420,20 +420,30 @@ class Device:
       if topic.startswith('$iothub/twin/PATCH/properties/desired/'): # twin desired property change
         self._echoDesired(msg, topic)
       elif topic.startswith('$iothub/methods'): # C2D
-        ret = MAKE_CALLBACK(self, "Command", msg, topic, 0)
+        index = topic.find("$rid=")
+        method_id = 1
+        method_name = "None"
+        if index == -1:
+          LOG_IOTC("ERROR: C2D doesn't include topic id")
+        else:
+          method_id = topic[index + 5:]
+          topic_template = "$iothub/methods/POST/"
+          len_temp = len(topic_template)
+          method_name = topic[len_temp:topic.find("/", len_temp + 1)]
+
+        ret = MAKE_CALLBACK(self, "Command", msg, method_name, 0)
         ret_code = 200
         ret_message = "{}"
         if ret.getResponseCode() != None:
           ret_code = ret.getResponseCode()
         if ret.getResponseMessage() != None:
           ret_message = ret.getResponseMessage()
-        topic_template = "$iothub/methods/POST/echo/?$rid="
-        method_id = topic[len(topic_template):]
+
         next_topic = '$iothub/methods/res/{}/?$rid={}'.format(ret_code, method_id)
-        LOG_IOTC("C2D: => " + next_topic + " with data " + ret_message)
+        LOG_IOTC("C2D: => " + next_topic + " with data " + ret_message  + " and name => " + method_name, IOTLogLevel.IOTC_LOGGING_ALL)
         (result, msg_id) = self._mqtts.publish(next_topic, ret_message, qos=0)
         if result != MQTT_SUCCESS:
-          LOG_IOTC("ERROR: (send method callback) failed to send. MQTT client return value: " + str(result) + ". ERROR:0x000B")
+          LOG_IOTC("ERROR: (send method callback) failed to send. MQTT client return value: " + str(result))
       else:
         if not topic.startswith('$iothub/twin/res/'): # not twin response
           LOG_IOTC('ERROR: unknown twin! {} - {}'.format(topic, msg))
@@ -462,9 +472,7 @@ class Device:
     LOG_IOTC("- iotc :: _on_publish :: " + str(data), IOTLogLevel.IOTC_LOGGING_ALL)
     if data == None:
       data = ""
-    if self._messages[str(msgid)] == None:
-      LOG_IOTC("ERROR: message send confirmation failed. (_on_publish) Unknown message id. ERR:0x000C")
-    else:
+    if msgid != None and str(msgid) in self._messages:
       MAKE_CALLBACK(self, "MessageSent", self._messages[str(msgid)], data, 0)
       del self._messages[str(msgid)]
 
@@ -563,8 +571,8 @@ class Device:
     if mqtt != None:
       (result, msg_id) = self._mqtts.publish(target, data)
       if result != mqtt.MQTT_ERR_SUCCESS:
-        LOG_IOTC("ERROR: (sendTelemetry) failed to send. MQTT client return value: " + str(result) + ". ERROR:0x000B")
-        return 11
+        LOG_IOTC("ERROR: (sendTelemetry) failed to send. MQTT client return value: " + str(result) + "")
+        return 1
       self._messages[str(msg_id)] = data
     else:
       self._mqtts.publish(target, data)
@@ -598,6 +606,7 @@ class Device:
     self._mqttConnected = False
     if mqtt != None:
       self._mqtts.disconnect()
+      self._mqtts.loop_stop()
     else:
       MAKE_CALLBACK(self, "ConnectionStatus", None, None, 0)
     return 0
@@ -619,5 +628,4 @@ class Device:
       except: # non-blocking wasn't implemented
         self._mqtts.wait_msg()
     else: #paho
-      self._mqtts.loop()
       time.sleep(1)
