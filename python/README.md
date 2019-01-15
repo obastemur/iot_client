@@ -2,7 +2,7 @@
 
 ### Prerequisites
 
-Python 2.7+ or Python 3.6+ or Micropython 1.9+
+Python 2.7+ or Python 3.4+ or Micropython 1.9+
 
 *Runtime dependencies vary per platform*
 
