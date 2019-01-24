@@ -6,9 +6,11 @@ import sys
 
 file_path = __file__[:len(__file__) - len("basics.py")]
 # Update /usr/local/lib/python2.7/site-packages/iotc/__init__.py ?
-# file_path = file_path[:len(file_path) - 1] if file_path[len(file_path) - 1:] == "b" else file_path
-# sys.path.append(os.path.join(file_path, "..", "src"))
-sys.dont_write_bytecode = True
+if 'dont_write_bytecode' in dir(sys):
+  sys.dont_write_bytecode = True
+else: # micropython
+  file_path = file_path[:len(file_path) - 1] if file_path[len(file_path) - 1:] == "b" else file_path
+  sys.path.append(file_path + "../src")
 
 import iotc
 from iotc import IOTConnectType, IOTLogLevel
@@ -40,7 +42,7 @@ def test_MAKE_CALLBACK():
 def test_quote():
   assert iotc._quote("abc+\\0123\"?%456@def", '~()*!.') == "abc%2B%5C0123%22%3F%25456%40def"
 
-with open(os.path.join(file_path, "config.json"), "r") as fh:
+with open(file_path + "config.json", "r") as fh:
   configText = fh.read()
 config = json.loads(configText)
 assert config["scopeId"] != None and config["deviceKey"] != None and config["deviceId"] != None and config["hostName"] != None
@@ -56,16 +58,19 @@ def test_lifetime():
       assert info.getStatusCode() == 0
       testCounter += 1
       assert device.sendTelemetry("{\"temp\":22}") == 0
+      testCounter += 1
+      assert device.sendProperty("{\"dieNumber\":3}") == 0
     else:
-      assert testCounter == 2
+      assert testCounter == 4
       print ("- ", "done")
 
   def onmessagesent(info):
     global testCounter
 
-    assert info.getPayload() == "{\"temp\":22}"
+    assert info.getPayload() == "{\"temp\":22}" or info.getPayload() == "{\"dieNumber\":3}"
     testCounter += 1
-    assert device.disconnect() == 0
+    if info.getPayload() == "{\"dieNumber\":3}":
+      assert device.disconnect() == 0
 
   def oncommand(info):
     global testCounter

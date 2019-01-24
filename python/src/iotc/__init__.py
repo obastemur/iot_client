@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 # Licensed under the MIT license.
 
-__version__ = "0.1.6"
+__version__ = "0.1.7"
 __name__    = "iotc"
 
 import sys
@@ -493,7 +493,7 @@ class Device:
 
   def _mqttcb(self, topic, msg):
     # NOOP
-    LOG_IOTC("???" + topic + " " + msg)
+    pass
 
   def _mqttConnect(self, err, hostname):
     if err != None:
@@ -583,22 +583,26 @@ class Device:
     token = 'SharedAccessSignature sr={}&sig={}&se={}'.format(uri, signature, token_expiry)
     return token
 
-  def sendTelemetry(self, data):
-    LOG_IOTC("- iotc :: sendTelemetry :: " + data, IOTLogLevel.IOTC_LOGGING_ALL)
-    target = 'devices/{}/messages/events/'.format(self._deviceId)
+  def _sendCommon(self, topic, data):
     if mqtt != None:
-      (result, msg_id) = self._mqtts.publish(target, data)
+      (result, msg_id) = self._mqtts.publish(topic, data)
       if result != mqtt.MQTT_ERR_SUCCESS:
         LOG_IOTC("ERROR: (sendTelemetry) failed to send. MQTT client return value: " + str(result) + "")
         return 1
       self._messages[str(msg_id)] = data
     else:
-      self._mqtts.publish(target, data)
+      self._mqtts.publish(topic, data)
       msg_id = 0
       self._messages[str(msg_id)] = data
-      self._on_publish(None, target, msg_id)
+      self._on_publish(None, topic, msg_id)
 
     return 0
+
+  def sendTelemetry(self, data):
+    LOG_IOTC("- iotc :: sendTelemetry :: " + data, IOTLogLevel.IOTC_LOGGING_ALL)
+    topic = 'devices/{}/messages/events/'.format(self._deviceId)
+
+    return self._sendCommon(topic, data)
 
   def sendState(self, data):
     return self.sendTelemetry(data)
@@ -608,13 +612,9 @@ class Device:
 
   def sendProperty(self, data):
     LOG_IOTC("- iotc :: sendProperty :: " + data, IOTLogLevel.IOTC_LOGGING_ALL)
-    target = '$iothub/twin/PATCH/properties/reported/?$rid={}'.format(int(time.time()))
-    self._mqtts.publish(target, data)
-    if mqtt != None:
-      msg_id = 0
-      self._messages[str(msg_id)] = data
-      self._on_publish(None, target, msg_id)
-    return 0
+    topic = '$iothub/twin/PATCH/properties/reported/?$rid={}'.format(int(time.time()))
+
+    return self._sendCommon(topic, data)
 
   def disconnect(self):
     if not self.isConnected():
