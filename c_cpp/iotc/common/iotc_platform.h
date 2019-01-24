@@ -25,13 +25,20 @@ defined(ARDUINO_SAMD_MKR1000)
 #elif defined(ARDUINO)
 #include <WiFi101.h>
 #include <WifiSSLClient.h>
-#endif
+#endif // ARDUINO_SAMD_FEATHER_M0
 
-#ifdef ARDUINO_WIFI_SSL_CLIENT
+#if defined(ARDUINO_WIFI_SSL_CLIENT)
 #define USE_LIGHT_CLIENT 1
 #endif // ARDUINO_WIFI_SSL_CLIENT
 
 #if defined(__MBED__)
+
+#if defined(ARDUINO)
+#error "Both __MBED__ and ARDUINO were defined"
+#endif // defined(ARDUINO)
+
+#define USE_LIGHT_CLIENT 1
+
 #include <mbed.h>
 #include "MQTTmbed.h"
 #include "MQTTClient.h"
@@ -41,6 +48,8 @@ defined(ARDUINO_SAMD_MKR1000)
 #include "../mbed_os/mbed_tls_client.h"
 #define WAITMS wait_ms
 #define SERIAL_PRINT printf
+
+#define F(x) x
 
 #elif defined (ARDUINO)
 #include <arduino.h>

@@ -16,7 +16,7 @@ public:
 
     StringBuffer(StringBuffer &buffer);
 
-    StringBuffer(const char * str, unsigned lengthStr, bool isCopy = true);
+    StringBuffer(const char * str, unsigned int lengthStr, bool isCopy = true);
 
     StringBuffer(unsigned lengthStr);
 

@@ -290,10 +290,10 @@ static void deviceTwinGetStateCallback(DEVICE_TWIN_UPDATE_STATE update_state,
     }
 }
 
-
 void handlePayload(char *msg, unsigned long msg_length, char *topic, unsigned long topic_length) {
     if (topic_length) {
-        AzureIOT::StringBuffer topicName(topic, topic_length, false /*do not copy*/);
+        assert(topic != NULL);
+        AzureIOT::StringBuffer topicName(topic, topic_length);
         if (topicName.startsWith("$iothub/twin/res", strlen("$iothub/twin/res"))) return;
 
         AzureIOT::StringBuffer payload;
@@ -310,7 +310,7 @@ void handlePayload(char *msg, unsigned long msg_length, char *topic, unsigned lo
                 return;
             }
 
-            const char* topicId = (topic + index + 5);
+            const char* topicId = (*topicName + index + 5);
             const char* topicTemplate = "$iothub/methods/POST/";
             const int topicTemplateLength = strlen(topicTemplate);
             index = topicName.indexOf("/", 1, topicTemplateLength + 1);

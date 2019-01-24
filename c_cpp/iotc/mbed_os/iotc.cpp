@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if defined(__MBED__)
-#include "../common/definitions.h"
+#include "../common/iotc_platform.h"
 #if defined(USE_LIGHT_CLIENT)
 
 #include <stdio.h>
@@ -13,7 +13,7 @@
 #include "../common/iotc_internal.h"
 
 unsigned long getNow() {
-    return AzureIOTC::TLSClient::nowTime();
+    return AzureIOT::TLSClient::nowTime();
 }
 
 int socketReadThemAll(AzureIOT::TLSClient *client, AzureIOT::StringBuffer &readBuffer) {
@@ -148,7 +148,7 @@ int getHubHostName(const char* dpsEndpoint, const char *scopeId, const char* dev
 
     IOTC_LOG(F("- iotc.dps : getting auth..."));
     if (getDPSAuthString(scopeId, deviceId, key, *authHeader, STRING_BUFFER_256, size)) {
-        IOTC_LOG(F("ERROR: getDPSAuthString has failed");
+        IOTC_LOG(F("ERROR: getDPSAuthString has failed"));
         return 1;
     }
     IOTC_LOG(F("- iotc.dps : getting operation id..."));
@@ -170,7 +170,17 @@ int getHubHostName(const char* dpsEndpoint, const char *scopeId, const char* dev
 static void messageArrived(MQTT::MessageData& md)
 {
     MQTT::Message &message = md.message;
-    handlePayload((char*)message.payload, message.payloadlen, md.topicName.cstring, md.topicName.lenstring.len);
+    unsigned long lenTopic = 0;
+    char *dataTopic = NULL;
+    if (md.topicName.cstring) {
+        lenTopic = strlen(md.topicName.cstring);
+        dataTopic = md.topicName.cstring;
+    } else if (md.topicName.lenstring.len) {
+        lenTopic = md.topicName.lenstring.len;
+        dataTopic = md.topicName.lenstring.data;
+    }
+
+    handlePayload((char*)message.payload, message.payloadlen, dataTopic, lenTopic);
 }
 
 /* extern */
@@ -308,7 +318,7 @@ int iotc_do_work(IOTContext ctx) {
     IOTContextInternal *internal = (IOTContextInternal*)ctx;
     MUST_CALL_AFTER_CONNECT(internal);
 
-    return internal->mqttClient->yield(2000);
+    return internal->mqttClient->yield();
 }
 
 /* extern */

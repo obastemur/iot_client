@@ -4,7 +4,8 @@
 #ifndef AZURE_IOTC_INTERNAL_H
 #define AZURE_IOTC_INTERNAL_H
 
-#include "definitions.h"
+#include "iotc_platform.h"
+#include "iotc_definitions.h"
 
 #include <assert.h>
 #include <stddef.h> // size_t etc.
@@ -15,8 +16,6 @@
 #define DEFAULT_ENDPOINT "global.azure-devices-provisioning.net"
 #define TO_STR_(s) #s
 #define TO_STR(s) TO_STR_(s)
-
-#define assert(x) if (!(x)) { IOTC_LOG(F("ERROR:" TO_STR(x) "asserting has failed")); abort(); }
 
 typedef enum IOTCallbacks_TAG {
     ConnectionStatus    = 0x01,
@@ -147,7 +146,16 @@ void sendConfirmationCallback(const char* buffer, size_t size);
 int mqtt_publish(IOTContextInternal *internal, const char* topic, unsigned long topic_length,
     const char* msg, unsigned long msg_length);
 
+#ifdef ARDUINO
 void IOTC_LOG(const __FlashStringHelper *format, ...);
+#else
+#define IOTC_LOG(...) \
+    if (getLogLevel() > IOTC_LOGGING_DISABLED) { \
+        printf("  - "); \
+        printf(__VA_ARGS__); \
+        printf("\r\n"); \
+    }
+#endif
 
 #ifdef __cplusplus
 }

@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if defined(__MBED__)
-#include "../common/definitions.h"
+#include "../common/iotc_platform.h"
 #if defined(USE_LIGHT_CLIENT)
 #include "../common/json.h"
 #include "../common/iotc_internal.h"
@@ -20,11 +20,11 @@ int mqtt_publish(IOTContextInternal *internal, const char* topic, unsigned long 
     message.qos = MQTT::QOS0;
     message.id = ++internal->messageId;
 
-    int rc = internal->mqttClient->publish(topic, msg);
+    int rc = internal->mqttClient->publish(topic, message);
     if(rc != MQTT::SUCCESS) {
         return rc;
     }
-    return 0;
+    return iotc_do_work(internal);
 }
 
 #endif // defined(USE_LIGHT_CLIENT)

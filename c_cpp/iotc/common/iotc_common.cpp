@@ -3,28 +3,6 @@
 
 #include "iotc_internal.h"
 
-void IOTC_LOG(const __FlashStringHelper *format, ...) {
-    AzureIOT::StringBuffer buffer(STRING_BUFFER_1024);
-    va_list ap;
-    va_start(ap, format);
-    buffer.setLength(vsnprintf_P(*buffer, STRING_BUFFER_1024, (const char *)format, ap));
-    Serial.println(*buffer);
-    va_end(ap);
-}
-
-void IOTC_LOG(const char *format, ...) {
-    AzureIOT::StringBuffer buffer(STRING_BUFFER_1024);
-    va_list ap;
-    va_start(ap, format);
-#ifdef __AVR__
-    vsnprintf_P(*buffer, STRING_BUFFER_1024, (const char *)format, ap);
-#else
-    vsnprintf(*buffer, STRING_BUFFER_1024, (const char *)format, ap);
-#endif
-    Serial.println(*buffer);
-    va_end(ap);
-}
-
 /* extern */
 int iotc_on(IOTContext ctx, const char* eventName, IOTCallback callback, void* appContext) {
     CHECK_NOT_NULL(ctx)

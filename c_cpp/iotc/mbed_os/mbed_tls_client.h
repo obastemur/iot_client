@@ -5,11 +5,11 @@
 #define AZURE_IOTC_MBED_TLS_CLIENT_H
 
 #if defined(__MBED__)
-#include "../common/iotc_internal.h"
-#if defined(USE_LIGHT_CLIENT)
 #include "NetworkInterface.h"
 #include "TLSSocket.h"
 #include "NTPClient.h"
+#include <assert.h>
+#include "iotc_definitions.h"
 
 namespace AzureIOT {
 
@@ -67,7 +67,7 @@ sync_ntp:
                         goto retry_time;
                     }
 
-                    IOTC_LOG(F("ERROR: can't sync to NTP server"));
+                    printf("- ERROR: can't sync to NTP server\r\n");
                     return 0;
                 }
             }
@@ -85,7 +85,6 @@ sync_ntp:
 
 } // namespace AzureIOT
 
-#endif // defined(USE_LIGHT_CLIENT)
 #endif // __MBED__
 
 #endif // AZURE_IOTC_MBED_TLS_CLIENT_H

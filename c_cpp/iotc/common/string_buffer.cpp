@@ -138,8 +138,8 @@ bool StringBuffer::hash(const char *key, unsigned key_length)
     mbedtls_md_context_t ctx;
 
     md_info = mbedtls_md_info_from_type(md);
-    unsigned char *hmac_hash = hmac_hash = (unsigned char*) malloc(hash_size + 1);
     unsigned hash_size = (unsigned) mbedtls_md_get_size(md_info);
+    unsigned char *hmac_hash = (unsigned char*) malloc(hash_size + 1);
 
     mbedtls_md_init(&ctx);
     mbedtls_md_setup(&ctx, md_info, 1);
@@ -147,28 +147,42 @@ bool StringBuffer::hash(const char *key, unsigned key_length)
     mbedtls_md_hmac_update(&ctx, (const unsigned char*) data, length);
     mbedtls_md_hmac_finish(&ctx, hmac_hash);
 
-    memcpy(data, hmac_hash, hash_size);
-    data[hash_size] = 0;
-    length = hash_size;
+    free(data);
+    data = (char*)hmac_hash;
+    setLength(hash_size);
     mbedtls_md_free(&ctx);
-
-    free(hmac_hash);
 
     return true;
 }
 
 bool StringBuffer::base64Decode() {
-#error "IMPLEMENT ME"
-//        keyLength = 0;
-// mbedtls_base64_decode((unsigned char*)*keyDecoded, STRING_BUFFER_128, &keyLength,
-//         (const unsigned char*)*keyBuffer, keyBuffer.getLength());
+    assert(data != NULL && length > 0);
+    char *decoded = (char*) malloc(length + 1); assert(decoded != NULL);
+    size_t keyLength = 0;
+    mbedtls_base64_decode((unsigned char*)decoded, length, &keyLength,
+        (const unsigned char*)data, getLength());
+    assert(keyLength > 0);
+    free(data);
+    data = (char*) malloc(keyLength + 1); assert(data != NULL);
+    memcpy(data, decoded, keyLength);
+    setLength(keyLength);
+    free(decoded);
+    return true;
 }
 
 bool StringBuffer::base64Encode() {
-#error "IMPLEMENT ME"
-    // mbedtls_base64_encode((unsigned char*)*tempPassword,
-    //         tempPassword.getLength(), &keyLength,
-    //         (const unsigned char*)*stringToSign, stringToSign.getLength());
+    assert(data != NULL && length > 0);
+    char *decoded = (char*) malloc(length * 3); assert(decoded != NULL);
+    size_t keyLength = 0;
+    mbedtls_base64_encode((unsigned char*)decoded, length * 3, &keyLength,
+        (const unsigned char*)data, getLength());
+    assert(keyLength > 0);
+    free(data);
+    data = (char*) malloc(keyLength + 1); assert(data != NULL);
+    memcpy(data, decoded, keyLength);
+    setLength(keyLength);
+    free(decoded);
+    return true;
 }
 #elif defined(ARDUINO)
 bool StringBuffer::hash(const char *key, unsigned key_length)
@@ -194,7 +208,9 @@ bool StringBuffer::base64Decode() {
     char *decoded = (char*) malloc(length + 1); assert(decoded != NULL);
     size_t size = base64_decode(decoded, data, length);
     assert (size <= length + 1);
-    memcpy(data, decoded, size); // size should match.. so copy instead of fragmenting memory
+    free(data);
+    data = (char*) malloc(size + 1); assert(data != NULL);
+    memcpy(data, decoded, size);
     setLength(size);
     free(decoded);
     return true;
@@ -206,14 +222,13 @@ bool StringBuffer::base64Encode() {
     size_t size = base64_encode(decoded, data, length);
     assert (size < length * 3);
     free(data);
-    data = (char*) malloc(size + 1);
+    data = (char*) malloc(size + 1); assert(data != NULL);
     memcpy(data, decoded, size);
-    free(decoded);
     setLength(size);
-
+    free(decoded);
     return true;
 }
-#endif
+#endif // __MBED__
 
 StringBuffer::StringBuffer(StringBuffer &buffer): data(NULL), immutable(NULL) {
     length = 0;
@@ -221,13 +236,15 @@ StringBuffer::StringBuffer(StringBuffer &buffer): data(NULL), immutable(NULL) {
     initialize(buffer.data, buffer.length);
 }
 
-StringBuffer::StringBuffer(const char * str, unsigned lengthStr, bool isCopy):
+StringBuffer::StringBuffer(const char * str, unsigned int lengthStr, bool isCopy):
     data(NULL), immutable(NULL) {
     if (isCopy) {
         length = 0;
-
-        initialize(str, lengthStr);
+        if (str != NULL) {
+            initialize(str, lengthStr);
+        }
     } else {
+        assert(str != NULL);
         immutable = str;
         length = lengthStr;
     }
@@ -284,4 +301,4 @@ void StringBuffer::setLength(unsigned l) {
     data[l] = char(0);
 }
 
-} // namespace AzureIOTCLite
+} // namespace AzureIOT

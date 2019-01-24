@@ -1,7 +1,7 @@
 // Copyright (c) Oguz Bastemur. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#include "../common/definitions.h"
+#include "../common/iotc_platform.h"
 #if defined(ARDUINO) && defined(USE_LIGHT_CLIENT)
 
 #include <stdio.h>
@@ -67,7 +67,7 @@ retry_getNow:
 static unsigned long g_udpTime = 0, g_lastRead = 0;
 unsigned long getNow() {
     unsigned long ms = millis();
-    if (g_udpTime == 0 || ms - g_lastRead > (60 * 60 * 1000)) {
+    if (g_udpTime == 0 || ms - g_lastRead > NTP_SYNC_PERIOD) {
         g_udpTime = _getNow();
         g_lastRead = ms;
     }
