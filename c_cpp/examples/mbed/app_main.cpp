@@ -5,8 +5,6 @@
 #include "easy-connect.h"
 
 #include "mbed.h"
-#include "mbed_trace.h"
-#include "TLSSocket.h"
 #include "NetworkInterface.h"
 #include <string.h>
 
