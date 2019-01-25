@@ -20,7 +20,6 @@
 *.lai
 *.la
 *.a
-*.lib
 
 # Executables
 *.exe
@@ -46,3 +45,17 @@ auth.json
 iotc.egg-info
 python/build
 python/dist
+
+.DS_Store
+c_cpp/examples/esp8266_arduino/src/
+c_cpp/examples/mkr1000/src/
+c_cpp/examples/mbed/src/
+c_cpp/examples/mbed/iotz-mbed-deps/
+c_cpp/examples/mbed/mbed_config.h
+c_cpp/examples/mbed/mbed_settings.py
+c_cpp/examples/mbed/Makefile
+c_cpp/examples/mbed/GettingStarted.html
+c_cpp/examples/mbed/.mbedignore
+c_cpp/examples/mbed/.mbed
+c_cpp/examples/mbed/BUILD
+c_cpp/examples/mbed/mbed-os/
