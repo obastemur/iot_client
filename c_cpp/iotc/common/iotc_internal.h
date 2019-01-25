@@ -9,6 +9,7 @@
 
 #include <assert.h>
 #include <stddef.h> // size_t etc.
+#include <limits.h>
 #include "../iotc.h"
 #include "string_buffer.h"
 

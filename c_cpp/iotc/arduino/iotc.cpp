@@ -78,7 +78,9 @@ int _getOperationId(const char* dpsEndpoint, const char* scopeId, const char* de
     const char* authHeader, char *operationId, char *hostName) {
     ARDUINO_WIFI_SSL_CLIENT client;
     int exitCode = 0;
+#ifndef USES_WIFI101
     client.setCACert((const uint8_t*)SSL_CA_PEM_DEF, strlen((const char*)SSL_CA_PEM_DEF));
+#endif
 
     int retry = 0;
     while (retry < 5 && !client.connect(dpsEndpoint, AZURE_HTTPS_SERVER_PORT)) retry++;
@@ -252,7 +254,9 @@ int iotc_connect(IOTContext ctx, const char* scope, const char* keyORcert,
     }
 
     internal->tlsClient = new ARDUINO_WIFI_SSL_CLIENT();
+#ifndef USES_WIFI101
     internal->tlsClient->setCACert((const uint8_t*)SSL_CA_PEM_DEF, strlen((const char*)SSL_CA_PEM_DEF));
+#endif
 
     internal->mqttClient = new PubSubClient(*hostName, AZURE_MQTT_SERVER_PORT, internal->tlsClient);
     internal->mqttClient->setCallback(messageArrived);

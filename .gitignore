@@ -47,6 +47,8 @@ python/build
 python/dist
 
 .DS_Store
+c_cpp/examples/esp8266_arduino/src/
+c_cpp/examples/mkr1000/src/
 c_cpp/examples/mbed/src/
 c_cpp/examples/mbed/iotz-mbed-deps/
 c_cpp/examples/mbed/mbed_config.h

@@ -5,6 +5,8 @@
 #if defined(ARDUINO) && defined(USE_LIGHT_CLIENT)
 #include "../common/json.h"
 #include "../common/iotc_internal.h"
+#include <SPI.h>
+#include <stdarg.h>
 
 int mqtt_publish(IOTContextInternal *internal, const char* topic, unsigned long topic_length,
     const char* msg, unsigned long msg_length) {
@@ -20,7 +22,7 @@ void IOTC_LOG(const __FlashStringHelper *format, ...) {
         va_list ap;
         va_start(ap, format);
         AzureIOT::StringBuffer buffer(STRING_BUFFER_1024);
-        buffer.setLength(vsnprintf_P(*buffer, STRING_BUFFER_1024, (const char *)format, ap));
+        buffer.setLength(vsnprintf(*buffer, STRING_BUFFER_1024, (const char *)format, ap));
         Serial.println(*buffer);
         va_end(ap);
     }

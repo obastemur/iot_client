@@ -11,20 +11,18 @@
 #include <WiFiClientSecure.h>
 #define ARDUINO_WIFI_SSL_CLIENT WiFiClientSecure
 
+#elif defined(ARDUINO_SAMD_MKR1010)
+#include <WiFi101.h>
+#include <WiFiNINA.h>
+#define ARDUINO_WIFI_SSL_CLIENT WiFiSSLClient
+#define USES_WIFI101
+
 #elif defined(ARDUINO_SAMD_ZERO) || defined(ARDUINO_SAMD_MKR1000)
 #include <WiFi101.h>
 #include <WifiSSLClient.h>
 #define ARDUINO_WIFI_SSL_CLIENT WiFiSSLClient
+#define USES_WIFI101
 
-#elif defined(ARDUINO_SAMD_MKR1010)
-defined(ARDUINO_SAMD_MKR1000)
-#include <WiFi101.h>
-#include <WifiSSLClient.h>
-#define ARDUINO_WIFI_SSL_CLIENT WiFiSSLClient
-
-#elif defined(ARDUINO)
-#include <WiFi101.h>
-#include <WifiSSLClient.h>
 #endif // ARDUINO_SAMD_FEATHER_M0
 
 #if defined(ARDUINO_WIFI_SSL_CLIENT)
