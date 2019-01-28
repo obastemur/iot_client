@@ -1,4 +1,4 @@
-## iotc - Azure IoT - Python (light) device SDK Documentation
+## iotc - Azure IoT Central - Python (light) device SDK Documentation
 
 ### Prerequisites
 

@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 # Licensed under the MIT license.
 
-__version__ = "0.1.7"
+__version__ = "0.1.8"
 __name__    = "iotc"
 
 import sys

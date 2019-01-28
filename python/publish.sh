@@ -7,6 +7,6 @@ if [[ $1 == 'test' ]]; then
   TEST="-r testpypi"
 fi
 
-python setup.py sdist bdist_wheel
+python2 setup.py sdist bdist_wheel
 python3 setup.py sdist bdist_wheel
-twine upload dist/* $TEST
+python3 twine upload dist/* $TEST

@@ -20,3 +20,7 @@
 - adjust testing for micropython client
 - merge mqtt publish interface
 - pass the mqtt channel noise
+
+### 0.1.8
+
+- Update README
