@@ -66,8 +66,7 @@ def test_lifetime():
 
   def onmessagesent(info):
     global testCounter
-
-    assert info.getPayload() == "{\"temp\":22}" or info.getPayload() == "{\"dieNumber\":3}"
+    assert info.getPayload() == "{\"temp\":22}" or info.getPayload() == "{\"dieNumber\":3}" or info.getPayload() == " "
     testCounter += 1
     if info.getPayload() == "{\"dieNumber\":3}":
       assert device.disconnect() == 0

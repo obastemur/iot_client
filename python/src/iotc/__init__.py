@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 # Licensed under the MIT license.
 
-__version__ = "0.1.8"
+__version__ = "0.1.9"
 __name__    = "iotc"
 
 import sys
@@ -526,6 +526,8 @@ class Device:
     self._mqtts.subscribe('$iothub/methods/#')
 
     MAKE_CALLBACK(self, "ConnectionStatus", None, None, 0)
+
+    self._sendCommon("$iothub/twin/GET/?$rid=0", " ")
 
     return 0
 
