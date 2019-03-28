@@ -17,7 +17,7 @@ pip install iotc
 
 ```
 import iotc
-device = iotc.device(scopeId, keyORCert, deviceId, credType)
+device = iotc.Device(scopeId, keyORCert, deviceId, credType)
 ```
 
 - *scopeId*    : Azure IoT DPS Scope Id
