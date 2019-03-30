@@ -6,6 +6,10 @@ __name__    = "iotc"
 
 import sys
 
+class IOTConnectType:
+  IOTC_CONNECT_SYMM_KEY  = 1
+  IOTC_CONNECT_X509_CERT = 2
+
 gIsMicroPython = ('implementation' in dir(sys)) and ('name' in dir(sys.implementation)) and (sys.implementation.name == 'micropython')
 
 try:
@@ -24,9 +28,9 @@ except ImportError:
 http = None
 if gIsMicroPython == False:
   try:
-    import httplib2 as http
+    import httplib as http
   except ImportError:
-    print("ERROR: missing dependency httplib2")
+    print("ERROR: missing dependency httplib")
     sys.exit()
 else:
   try:
@@ -113,14 +117,20 @@ def _createMQTTClient(__self, username, passwd):
     __self._mqtts.on_log = __self._on_log
     __self._mqtts.on_publish = __self._on_publish
     __self._mqtts.on_disconnect = __self._on_disconnect
-    __self._mqtts.username_pw_set(username=username, password=passwd)
-    __self._mqtts.tls_set(ca_certs=_get_cert_path(), certfile=None, keyfile=None, cert_reqs=ssl.CERT_REQUIRED, tls_version=ssl.PROTOCOL_TLSv1, ciphers=None)
-    __self._mqtts.tls_insecure_set(False)
+
+    if __self._credType == IOTConnectType.IOTC_CONNECT_SYMM_KEY:
+      __self._mqtts.username_pw_set(username=username, password=passwd)
+    else:
+      _certfile = __self._certfile
+      _keyfile = __self._keyfile
+
+    __self._mqtts.tls_set(ca_certs=_get_cert_path(), certfile=_certfile, keyfile=_keyfile, cert_reqs=ssl.CERT_REQUIRED, tls_version=ssl.PROTOCOL_SSLv23)
 
     __self._mqtts.connect_async(__self._hostname, port=8883, keepalive=120)
     __self._mqtts.loop_start()
   else:
     __self._mqtts = MQTTClient(__self._deviceId, __self._hostname, port=8883, user=username, password=passwd, keepalive=0, ssl=True, ssl_params={})
+
     __self._mqtts.set_callback(__self._mqttcb)
     __self._mqtts.connect()
 
@@ -174,10 +184,6 @@ class IOTCallbackInfo:
 
   def getMessageId(self):
     return self._msgid
-
-class IOTConnectType:
-  IOTC_CONNECT_SYMM_KEY  = 1
-  IOTC_CONNECT_X509_CERT = 2
 
 class IOTProtocol:
   IOTC_PROTOCOL_MQTT = 1
@@ -237,23 +243,42 @@ def _quote(a, b):
 def _get_cert_path():
   file_path = __file__[:len(__file__) - len("__init__.py")]
   # check for .py(c) diff
+
   file_path = file_path[:len(file_path) - 1] if file_path[len(file_path) - 1:] == "_" else file_path
   LOG_IOTC("- iotc :: _get_cert_path :: " + file_path, IOTLogLevel.IOTC_LOGGING_ALL)
   return file_path + "baltimore.pem"
 
-def _request(device, target_url, method, body, headers):
+def _do_request(device, target_url, method, body, headers, certfile, keyfile):
+  conn = http.HTTPSConnection(device._dpsEndPoint, '443', cert_file=certfile, key_file=keyfile)
+
+  header_string = "content-type: " + headers["content-type"] + "\r\n"
+  header_string += "user-agent: " + headers["user-agent"] + "\r\n"
+  header_string += "accept: " + headers["Accept"] + "\r\n"
+  header_string += "accept-encoding: gzip, deflate\r\n"
+
+  if "authorization" in headers:
+    header_string += "authorization: " + headers["authorization"] + "\r\n"
+
+  if body != None:
+    header_string += "Content-Length: " + str(len(body)) + "\r\n"
+    header_string += "\r\n" + body
+  else:
+    header_string += "\r\n"
+
+  socket_buffer = target_url + " HTTP/1.1\r\nHost: " +  device._dpsEndPoint + "\r\n" + header_string
+  conn.request(method, socket_buffer)
+
+  response = conn.getresponse()
+  return response.read()
+
+
+def _request(device, target_url, method, body, headers, certfile, keyfile):
   content = None
   if http != None:
-    response, content = http.Http().request(
-        target_url,
-        method,
-        body,
-        headers)
+    return _do_request(device, target_url, method, body, headers, certfile, keyfile)
   else:
     response = urequests.request(method, target_url, data=body, headers=headers)
-    content = response.text
-
-  return content
+    return response.text
 
 class Device:
   def __init__(self, scopeId, keyORCert, deviceId, credType):
@@ -262,7 +287,6 @@ class Device:
     self._mqttConnected = False
     self._deviceId = deviceId
     self._scopeId = scopeId
-    self._keyORCert = keyORCert
     self._credType  = credType
     self._hostname = None
     self._auth_response_received = None
@@ -279,6 +303,12 @@ class Device:
       "Command": None,
       "SettingUpdated": None
     }
+
+    if credType == IOTConnectType.IOTC_CONNECT_SYMM_KEY:
+      self._keyORCert = keyORCert
+    else:
+      self._keyfile = keyORCert["keyfile"]
+      self._certfile = keyORCert["certfile"]
 
   def setSSLVerification(self, is_enabled):
     if self._auth_response_received:
@@ -336,7 +366,7 @@ class Device:
     LOG_IOTC("- iotc :: _loopAssign :: " + uri, IOTLogLevel.IOTC_LOGGING_ALL)
     target = urlparse(uri)
 
-    content = _request(self, target.geturl(), "GET", None, headers)
+    content = _request(self, target.geturl(), "GET", None, headers, self._certfile, self._keyfile)
     try:
       data = json.loads(content.decode("utf-8"))
     except:
@@ -503,8 +533,12 @@ class Device:
     LOG_IOTC("- iotc :: _mqttConnect :: " + hostname, IOTLogLevel.IOTC_LOGGING_ALL)
 
     self._hostname = hostname
-    username = '{}/{}/api-version=2016-11-14'.format(self._hostname, self._deviceId)
-    passwd = self._gen_sas_token(self._hostname, self._deviceId, self._keyORCert)
+    username = None
+    passwd = None
+
+    if self._credType == IOTConnectType.IOTC_CONNECT_SYMM_KEY:
+      username = '{}/{}/api-version=2016-11-14'.format(self._hostname, self._deviceId)
+      passwd = self._gen_sas_token(self._hostname, self._deviceId, self._keyORCert)
 
     _createMQTTClient(self, username, passwd)
 
@@ -537,17 +571,22 @@ class Device:
     body = "{\"registrationId\":\"%s\"}" % (self._deviceId)
     expires = int(time.time() + gEXPIRES)
 
-    sr = self._scopeId + "%2Fregistrations%2F" + self._deviceId
-    sigNoEncode = self._computeDrivedSymmetricKey(self._keyORCert, sr + "\n" + str(expires))
-    sigEncoded = _quote(sigNoEncode, '~()*!.\'')
+    authString = None
 
-    authString = "SharedAccessSignature sr=" + sr + "&sig=" + sigEncoded + "&se=" + str(expires) + "&skn=registration"
+    if self._credType == IOTConnectType.IOTC_CONNECT_SYMM_KEY:
+      sr = self._scopeId + "%2Fregistrations%2F" + self._deviceId
+      sigNoEncode = self._computeDrivedSymmetricKey(self._keyORCert, sr + "\n" + str(expires))
+      sigEncoded = _quote(sigNoEncode, '~()*!.\'')
+      authString = "SharedAccessSignature sr=" + sr + "&sig=" + sigEncoded + "&se=" + str(expires) + "&skn=registration"
+
     headers = {
       "content-type": "application/json; charset=utf-8",
       "user-agent": "iot-central-client/1.0",
-      "Accept": "*/*",
-      "authorization" : authString
+      "Accept": "*/*"
     }
+
+    if authString != None:
+      headers["authorization"] = authString
 
     if self._modelData != None:
       headers["data"] = self._modelData
@@ -555,7 +594,7 @@ class Device:
     uri = "https://%s/%s/registrations/%s/register?api-version=%s" % (self._dpsEndPoint, self._scopeId, self._deviceId, self._dpsAPIVersion)
     target = urlparse(uri)
 
-    content = _request(self, target.geturl(), "PUT", body, headers)
+    content = _request(self, target.geturl(), "PUT", body, headers, self._certfile, self._keyfile)
     data = None
     try:
       data = json.loads(content.decode("utf-8"))

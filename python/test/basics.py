@@ -6,11 +6,11 @@ import sys
 
 file_path = __file__[:len(__file__) - len("basics.py")]
 # Update /usr/local/lib/python2.7/site-packages/iotc/__init__.py ?
-if 'dont_write_bytecode' in dir(sys):
-  sys.dont_write_bytecode = True
-else: # micropython
-  file_path = file_path[:len(file_path) - 1] if file_path[len(file_path) - 1:] == "b" else file_path
-  sys.path.append(file_path + "../src")
+# if 'dont_write_bytecode' in dir(sys):
+#   sys.dont_write_bytecode = True
+# else: # micropython
+file_path = file_path[:len(file_path) - 1] if file_path[len(file_path) - 1:] == "b" else file_path
+sys.path.append(file_path + "../src")
 
 import iotc
 from iotc import IOTConnectType, IOTLogLevel
@@ -50,7 +50,7 @@ assert config["scopeId"] != None and config["deviceKey"] != None and config["dev
 testCounter = 0
 
 def test_lifetime():
-  device = iotc.Device(config["scopeId"], config["deviceKey"], config["deviceId"], IOTConnectType.IOTC_CONNECT_SYMM_KEY)
+  device = iotc.Device(config["scopeId"], config["deviceKey"], config["deviceId"], IOTConnectType.IOTC_CONNECT_X509_CERT)
 
   def onconnect(info):
     global testCounter
