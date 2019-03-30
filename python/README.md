@@ -25,6 +25,22 @@ device = iotc.Device(scopeId, keyORCert, deviceId, credType)
 - *deviceId*   : Device Id
 - *credType*   : `IOTConnectType.IOTC_CONNECT_SYMM_KEY` or `IOTConnectType.IOTC_CONNECT_X509_CERT`
 
+`keyORcert` for `X509` certificate:
+```
+credType = IOTConnectType.IOTC_CONNECT_X509_CERT
+keyORcert = {
+  "keyfile": "/src/python/test/device.key.pem",
+  "certfile": "/src/python/test/device.cert.pem"
+}
+```
+
+`keyORcert` for `SAS` token:
+```
+credType = IOTConnectType.IOTC_CONNECT_SYMM_KEY
+keyORcert = "xxxxxxxxxxxxxxx........"
+```
+
+
 #### setLogLevel
 set logging level
 ```
@@ -191,6 +207,7 @@ deviceId = "DEVICE_ID"
 scopeId = "SCOPE_ID"
 mkey = "DEVICE_KEY"
 
+# see iotc.Device documentation above for x509 argument sample
 iotc = iotc.Device(scopeId, mkey, deviceId, IOTConnectType.IOTC_CONNECT_SYMM_KEY)
 iotc.setLogLevel(IOTLogLevel.IOTC_LOGGING_API_ONLY)
 

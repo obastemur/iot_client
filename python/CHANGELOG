@@ -21,6 +21,8 @@
 - merge mqtt publish interface
 - pass the mqtt channel noise
 
-### 0.1.8
+### 0.2.0
+
+- add x509 authentication support
 
 - Update README

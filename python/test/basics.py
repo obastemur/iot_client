@@ -1,12 +1,12 @@
 # Copyright (c) Microsoft. All rights reserved.
 # Licensed under the MIT license.
 
-import os
 import sys
 
 file_path = __file__[:len(__file__) - len("basics.py")]
 # Update /usr/local/lib/python2.7/site-packages/iotc/__init__.py ?
 if 'dont_write_bytecode' in dir(sys):
+  import os
   sys.dont_write_bytecode = True
 else: # micropython
   file_path = file_path[:len(file_path) - 1] if file_path[len(file_path) - 1:] == "b" else file_path
@@ -50,7 +50,7 @@ assert config["scopeId"] != None and config["deviceKey"] != None and config["dev
 testCounter = 0
 
 def test_lifetime():
-  device = iotc.Device(config["scopeId"], config["deviceKey"], config["deviceId"], IOTConnectType.IOTC_CONNECT_SYMM_KEY)
+  device = iotc.Device(config["scopeId"], config["deviceKey"], config["deviceId"], config["TEST_ID"]) # 1 / 2 (symm / x509)
 
   def onconnect(info):
     global testCounter
@@ -61,14 +61,14 @@ def test_lifetime():
       testCounter += 1
       assert device.sendProperty("{\"dieNumber\":3}") == 0
     else:
-      assert testCounter == 4
+      assert testCounter >= 4 # manual vs e2e
       print ("- ", "done")
 
   def onmessagesent(info):
     global testCounter
     assert info.getPayload() == "{\"temp\":22}" or info.getPayload() == "{\"dieNumber\":3}" or info.getPayload() == " "
     testCounter += 1
-    if info.getPayload() == "{\"dieNumber\":3}":
+    if info.getPayload() == " ":
       assert device.disconnect() == 0
 
   def oncommand(info):
