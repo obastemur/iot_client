@@ -9,4 +9,4 @@ fi
 
 python2 setup.py sdist bdist_wheel
 python3 setup.py sdist bdist_wheel
-python3 twine upload dist/* $TEST
+twine upload dist/* $TEST
