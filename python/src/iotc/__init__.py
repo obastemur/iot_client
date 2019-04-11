@@ -595,7 +595,7 @@ class Device:
       headers["authorization"] = authString
 
     if self._modelData != None:
-      headers["data"] = self._modelData
+      body = "{\"registrationId\":\"%s\", \"data\":\"%s\"}" % (self._deviceId, json.dumps(self._modelData))
 
     uri = "https://%s/%s/registrations/%s/register?api-version=%s" % (self._dpsEndPoint, self._scopeId, self._deviceId, self._dpsAPIVersion)
     target = urlparse(uri)
@@ -683,14 +683,14 @@ class Device:
   def isConnected(self):
     return self._mqttConnected
 
-  def doNext(self):
+  def doNext(self, idleTime=1):
     if not self.isConnected():
       return
     if mqtt == None:
       try: # try non-blocking
         self._mqtts.check_msg()
-        time.sleep(1)
+        time.sleep(idleTime)
       except: # non-blocking wasn't implemented
         self._mqtts.wait_msg()
     else: #paho
-      time.sleep(1)
+      time.sleep(idleTime)
