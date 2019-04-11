@@ -51,6 +51,8 @@ testCounter = 0
 
 def test_lifetime():
   device = iotc.Device(config["scopeId"], config["deviceKey"], config["deviceId"], config["TEST_ID"]) # 1 / 2 (symm / x509)
+  if "modelData" in config:
+    assert device.setModelData(config["modelData"]) == 0
 
   def onconnect(info):
     global testCounter

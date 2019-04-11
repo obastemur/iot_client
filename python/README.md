@@ -40,7 +40,6 @@ credType = IOTConnectType.IOTC_CONNECT_SYMM_KEY
 keyORcert = "xxxxxxxxxxxxxxx........"
 ```
 
-
 #### setLogLevel
 set logging level
 ```
@@ -56,6 +55,17 @@ class IOTLogLevel:
 ```
 
 *i.e.* => `device.setLogLevel(IOTLogLevel.IOTC_LOGGING_API_ONLY)`
+
+#### setModelData
+set the device model data (if any)
+
+```
+device.setModelData(modelJSON)
+```
+
+*modelJSON*  : Device model definition.
+
+i.e. `device.setModelData({"iotcModelId":"PUT_MODEL_ID_HERE"})`
 
 #### setServiceHost
 set the service endpoint URL
@@ -208,7 +218,7 @@ scopeId = "SCOPE_ID"
 mkey = "DEVICE_KEY"
 
 # see iotc.Device documentation above for x509 argument sample
-iotc = iotc.Device(scopeId, mkey, deviceId, IOTConnectType.IOTC_CONNECT_SYMM_KEY)
+iotc = iotc.Device(scopeId, deviceKey, deviceId, IOTConnectType.IOTC_CONNECT_SYMM_KEY)
 iotc.setLogLevel(IOTLogLevel.IOTC_LOGGING_API_ONLY)
 
 gCanSend = False

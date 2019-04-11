@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 # Licensed under the MIT license.
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 __name__    = "iotc"
 
 import sys
@@ -324,15 +324,12 @@ class Device:
     return 0
 
   def setModelData(self, data):
-    LOG_IOTC("- iotc :: setModelData :: " + data, IOTLogLevel.IOTC_LOGGING_ALL)
+    LOG_IOTC("- iotc :: setModelData :: " + json.dumps(data), IOTLogLevel.IOTC_LOGGING_ALL)
     if self._auth_response_received:
       LOG_IOTC("ERROR: setModelData should be called before `connect`")
       return 1
 
-    if type(data) is str:
-      self._modelData = data
-    else:
-      self._modelData = json.dumps(data)
+    self._modelData = data
     self._dpsAPIVersion = "2019-01-15"
     return 0
 
@@ -574,7 +571,6 @@ class Device:
   def connect(self):
     global gEXPIRES
     LOG_IOTC("- iotc :: connect :: ", IOTLogLevel.IOTC_LOGGING_ALL)
-    body = "{\"registrationId\":\"%s\"}" % (self._deviceId)
     expires = int(time.time() + gEXPIRES)
 
     authString = None
@@ -595,7 +591,9 @@ class Device:
       headers["authorization"] = authString
 
     if self._modelData != None:
-      body = "{\"registrationId\":\"%s\", \"data\":\"%s\"}" % (self._deviceId, json.dumps(self._modelData))
+      body = "{\"registrationId\":\"%s\",\"data\":%s}" % (self._deviceId, json.dumps(self._modelData))
+    else:
+      body = "{\"registrationId\":\"%s\"}" % (self._deviceId)
 
     uri = "https://%s/%s/registrations/%s/register?api-version=%s" % (self._dpsEndPoint, self._scopeId, self._deviceId, self._dpsAPIVersion)
     target = urlparse(uri)
