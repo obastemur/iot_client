@@ -215,7 +215,7 @@ from iotc import IOTConnectType, IOTLogLevel
 
 deviceId = "DEVICE_ID"
 scopeId = "SCOPE_ID"
-mkey = "DEVICE_KEY"
+deviceKey = "DEVICE_KEY"
 
 # see iotc.Device documentation above for x509 argument sample
 iotc = iotc.Device(scopeId, deviceKey, deviceId, IOTConnectType.IOTC_CONNECT_SYMM_KEY)

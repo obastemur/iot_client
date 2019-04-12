@@ -26,3 +26,7 @@
 - add x509 authentication support
 
 - Update README
+
+### 0.2.2
+
+- fix documentation typos and add docs for modelData ++ enable it
