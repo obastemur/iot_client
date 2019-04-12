@@ -13,6 +13,11 @@ Python 2/3
 pip install iotc
 ```
 
+### Common Concepts
+
+- API calls should return `0` on success and `error code` otherwise.
+- External API naming convention follows `lowerCamelCase` for `Device` class members
+
 ### Usage
 
 ```
@@ -77,8 +82,17 @@ device.setServiceHost(url)
 
 *call this before connect*
 
+#### enableMessageTimestamp
+defines whether the telemetry messages will have a UTC timestamp or not. (default: False)
+
+```
+device.enableMessageTimestamp(True or False)
+```
+
+i.e. `device.enableMessageTimestamp(True)`
+
 #### connect
-connect device client
+connect device client  `# blocking`. Raises `ConnectionStatus` event.
 
 ```
 device.connect()
@@ -143,6 +157,15 @@ device.disconnect()
 ```
 
 i.e. `device.disconnect()`
+
+#### getDeviceSettings
+pulls latest twin data (device properties). Raises `SettingsUpdated` event.
+
+```
+device.getDeviceSettings()
+```
+
+i.e. `device.getDeviceSettings()`
 
 #### on
 set event callback to listen events

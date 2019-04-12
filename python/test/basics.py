@@ -59,19 +59,19 @@ def test_lifetime():
     if device.isConnected():
       assert info.getStatusCode() == 0
       testCounter += 1
+      assert device.enableMessageTimestamp(True) == 0
       assert device.sendTelemetry("{\"temp\":22}") == 0
       testCounter += 1
+      assert device.enableMessageTimestamp(False) == 0
       assert device.sendProperty("{\"dieNumber\":3}") == 0
     else:
-      assert testCounter >= 4 # manual vs e2e
+      assert testCounter >= 6 # manual vs e2e
       print ("- ", "done")
 
   def onmessagesent(info):
     global testCounter
     assert info.getPayload() == "{\"temp\":22}" or info.getPayload() == "{\"dieNumber\":3}" or info.getPayload() == " "
     testCounter += 1
-    if info.getPayload() == " ":
-      assert device.disconnect() == 0
 
   def oncommand(info):
     global testCounter
@@ -79,13 +79,11 @@ def test_lifetime():
     print("oncommand", info)
     assert info.getTag() == "echo"
     testCounter += 1
-    assert device.disconnect() == 0
 
   def onsettingsupdated(info):
     global testCounter
-    # TODO: match the tag / payload
     testCounter += 1
-    assert device.disconnect() == 0
+    print("onsettingsupdated", info)
 
   assert device.on("ConnectionStatus", onconnect) == 0
   assert device.on("MessageSent", onmessagesent) == 0
@@ -97,8 +95,11 @@ def test_lifetime():
   assert device.setDPSEndpoint(config["hostName"]) == 0
   assert device.connect() == 0
 
-  while device.isConnected():
+  while device.isConnected() and testCounter < 10:
     device.doNext()
+
+  assert device.disconnect() == 0
+
 
 if pytest_run == False:
   test_LOG_IOTC()
