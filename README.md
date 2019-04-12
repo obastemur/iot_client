@@ -8,7 +8,7 @@ Bunch of lightweight device clients for Azure IoT Central.
 ### Supported platforms
 
 - [C/CPP](c_cpp/README.md) arduino/mbedOS/esp32/esp8266/mkr1010/mkr1000/esp8285/sparkfun/embedded linux...
-- [Python](python/README.md) 2/3/Micropython*
+- [Python](python/README.md) 2/3/Micropython* [![Downloads](https://pepy.tech/badge/iotc)](https://pepy.tech/project/iotc)
 - Swift (coming soon)
 - Go (coming soon)
 
