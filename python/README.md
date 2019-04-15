@@ -61,16 +61,23 @@ class IOTLogLevel:
 
 *i.e.* => `device.setLogLevel(IOTLogLevel.IOTC_LOGGING_API_ONLY)`
 
+#### setExitOnError
+enable/disable application termination on mqtt later exceptions. (default false)
+```
+device.setExitOnError(isEnabled)
+```
+
+*i.e.* => `device.setExitOnError(True)`
+
 #### setModelData
 set the device model data (if any)
-
 ```
 device.setModelData(modelJSON)
 ```
 
 *modelJSON*  : Device model definition.
 
-i.e. `device.setModelData({"iotcModelId":"PUT_MODEL_ID_HERE"})`
+*i.e.* => `device.setModelData({"iotcModelId":"PUT_MODEL_ID_HERE"})`
 
 #### setServiceHost
 set the service endpoint URL
@@ -82,15 +89,6 @@ device.setServiceHost(url)
 
 *call this before connect*
 
-#### enableMessageTimestamp
-defines whether the telemetry messages will have a UTC timestamp or not. (default: False)
-
-```
-device.enableMessageTimestamp(True or False)
-```
-
-i.e. `device.enableMessageTimestamp(True)`
-
 #### connect
 connect device client  `# blocking`. Raises `ConnectionStatus` event.
 
@@ -98,18 +96,22 @@ connect device client  `# blocking`. Raises `ConnectionStatus` event.
 device.connect()
 ```
 
-i.e. `device.connect()`
+*i.e.* => `device.connect()`
 
 #### sendTelemetry
 send telemetry
 
 ```
-device.sendTelemetry(payload)
+device.sendTelemetry(payload, [[optional system properties]])
 ```
 
 *payload*  : A text payload.
 
-i.e. `device.sendTelemetry('{ "temperature": 15 }')`
+*i.e.* => `device.sendTelemetry('{ "temperature": 15 }')`
+
+You may also set system properties for the telemetry message. See also [iothub message format](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-messages-construct)
+
+*i.e.* => `device.sendTelemetry('{ "temperature":22 }', {"iothub-creation-time-utc": time.time()})`
 
 #### sendState
 send device state
@@ -120,7 +122,7 @@ device.sendState(payload)
 
 *payload*  : A text payload.
 
-i.e. `device.sendState('{ "status": "WARNING"}')`
+*i.e.* => `device.sendState('{ "status": "WARNING"}')`
 
 #### sendProperty
 send reported property
@@ -131,7 +133,7 @@ device.sendProperty(payload)
 
 *payload*  : A text payload.
 
-i.e. `device.sendProperty('{"countdown":{"value": %d}}')`
+*i.e.* => `device.sendProperty('{"countdown":{"value": %d}}')`
 
 #### doNext
 let framework do the partial MQTT work.
@@ -147,7 +149,7 @@ returns whether the connection was established or not.
 device.isConnected()
 ```
 
-i.e. `device.isConnected()`
+*i.e.* => `device.isConnected()`
 
 #### disconnect
 disconnect device client
@@ -156,7 +158,7 @@ disconnect device client
 device.disconnect()
 ```
 
-i.e. `device.disconnect()`
+*i.e.* => `device.disconnect()`
 
 #### getDeviceSettings
 pulls latest twin data (device properties). Raises `SettingsUpdated` event.
@@ -165,7 +167,7 @@ pulls latest twin data (device properties). Raises `SettingsUpdated` event.
 device.getDeviceSettings()
 ```
 
-i.e. `device.getDeviceSettings()`
+*i.e.* => `device.getDeviceSettings()`
 
 #### on
 set event callback to listen events
@@ -193,14 +195,16 @@ device.on("MessageSent", onmessagesent)
 
 ```
 def oncommand(info):
-  print("command -> " + info.getPayload())
+  print("command name:", info.getTag())
+  print("command args: ", info.getPayload())
 
 device.on("Command", oncommand)
 ```
 
 ```
 def onsettingsupdated(info):
-  print("settings -> " + info.getTag() + " = " + info.getPayload())
+  print("setting name:", info.getTag())
+  print("setting value: ", info.getPayload())
 
 device.on("SettingsUpdated", onsettingsupdated)
 ```
@@ -218,7 +222,7 @@ public members of `IOTCallbackInfo` are;
 
 `setResponse(responseCode, responseMessage)` : set callback response
 
-i.e. `info.setResponse(200, 'completed')`
+*i.e.* => `info.setResponse(200, 'completed')`
 
 `getClient()` : get active `device` client
 
@@ -258,10 +262,12 @@ def onmessagesent(info):
   print("\t- [onmessagesent] => " + str(info.getPayload()))
 
 def oncommand(info):
-  print("- [oncommand] => command name(" + info.getTag() + ") => " + str(info.getPayload()))
+  print("command name:", info.getTag())
+  print("command value: ", info.getPayload())
 
 def onsettingsupdated(info):
-  print("- [onsettingsupdated] => settings name(" + info.getTag() + ") => " + info.getPayload())
+  print("setting name:", info.getTag())
+  print("setting value: ", info.getPayload())
 
 iotc.on("ConnectionStatus", onconnect)
 iotc.on("MessageSent", onmessagesent)

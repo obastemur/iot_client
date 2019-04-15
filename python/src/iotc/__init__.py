@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 # Licensed under the MIT license.
 
-__version__ = "0.2.3"
+__version__ = "0.3.1"
 __name__    = "iotc"
 
 import sys
@@ -304,6 +304,7 @@ class Device:
     self._keyfile = None
     self._certfile = None
     self._addMessageTimeStamp = False
+    self._exitOnError = False
     self._events = {
       "MessageSent": None,
       "ConnectionStatus": None,
@@ -317,11 +318,15 @@ class Device:
       self._keyfile = keyORCert["keyfile"]
       self._certfile = keyORCert["certfile"]
 
-  def setSSLVerification(self, is_enabled):
+  def setExitOnError(self, isEnabled):
+    self._exitOnError = isEnabled
+    return 0
+
+  def setSSLVerification(self, isEnabled):
     if self._auth_response_received:
       LOG_IOTC("ERROR: setSSLVerification should be called before `connect`")
       return 1
-    self._sslVerificiationIsEnabled = is_enabled
+    self._sslVerificiationIsEnabled = isEnabled
     return 0
 
   def setModelData(self, data):
@@ -416,37 +421,43 @@ class Device:
       LOG_IOTC("ERROR: JSON parse for SettingsUpdated message object has failed. => " + msg + " => " + str(e))
       return
 
-    loop = [obj]
     version = None
     if 'desired' in obj:
-      loop = [obj['desired'], obj['reported']]
+      obj = obj['desired']
 
-    for obj in loop:
-      if '$version' in obj:
-        version = obj['$version']
-      else:
-        LOG_IOTC("ERROR: Unexpected payload for settings update => " + msg)
-        return
+    if not '$version' in obj:
+      LOG_IOTC("ERROR: Unexpected payload for settings update => " + msg)
+      return 1
 
-      for attr, value in obj.items():
-        if attr != '$version':
-          ret = MAKE_CALLBACK(self, "SettingsUpdated", json.dumps(value), attr, 0)
+    version = obj['$version']
 
-          if not topic.startswith('$iothub/twin/res/200/?$rid='):
-            ret_code = 200
-            ret_message = "completed"
-            if ret.getResponseCode() != None:
-              ret_code = ret.getResponseCode()
-            if ret.getResponseMessage() != None:
-              ret_message = ret.getResponseMessage()
+    for attr, value in obj.items():
+      if attr != '$version':
+        try:
+          eventValue = json.loads(json.dumps(value))
+          if version != None:
+            eventValue['$version'] = version
+        except:
+          continue
 
-            value["statusCode"] = ret_code
-            value["status"] = ret_message
-            value["desiredVersion"] = version
-            wrapper = {}
-            wrapper[attr] = value
-            msg = json.dumps(wrapper)
-            self.sendProperty(msg)
+        ret = MAKE_CALLBACK(self, "SettingsUpdated", json.dumps(eventValue), attr, 0)
+
+        if not topic.startswith('$iothub/twin/res/200/?$rid=') and version != None:
+          ret_code = 200
+          ret_message = "completed"
+          if ret.getResponseCode() != None:
+            ret_code = ret.getResponseCode()
+          if ret.getResponseMessage() != None:
+            ret_message = ret.getResponseMessage()
+
+          value["statusCode"] = ret_code
+          value["status"] = ret_message
+          value["desiredVersion"] = version
+          wrapper = {}
+          wrapper[attr] = value
+          msg = json.dumps(wrapper)
+          topic = '$iothub/twin/PATCH/properties/reported/?$rid={}'.format(int(time.time()))
+          self._sendCommon(topic, msg, True)
 
   def _onMessage(self, client, _, data):
     topic = ""
@@ -513,6 +524,8 @@ class Device:
       LOG_IOTC("mqtt-log : " + buf)
     elif level <= 8:
       LOG_IOTC("mqtt-log : " + buf) # transport layer exception
+      if self._exitOnError:
+        sys.exit()
 
   def _onDisconnect(self, client, userdata, rc):
     LOG_IOTC("- iotc :: _onDisconnect :: rc = " + str(rc), IOTLogLevel.IOTC_LOGGING_ALL)
@@ -521,18 +534,18 @@ class Device:
     if rc == 5:
       LOG_IOTC("on(disconnect) : Not authorized")
       self.disconnect()
-      sys.exit()
-    else:
-      MAKE_CALLBACK(self, "ConnectionStatus", userdata, "", rc)
+
+    MAKE_CALLBACK(self, "ConnectionStatus", userdata, "", rc)
 
   def _onPublish(self, client, data, msgid):
     LOG_IOTC("- iotc :: _onPublish :: " + str(data), IOTLogLevel.IOTC_LOGGING_ALL)
     if data == None:
       data = ""
 
-    if msgid != None and str(msgid) in self._messages:
+    if msgid != None and (str(msgid) in self._messages) and self._messages[str(msgid)] != None:
       MAKE_CALLBACK(self, "MessageSent", self._messages[str(msgid)], data, 0)
-      del self._messages[str(msgid)]
+      if (str(msgid) in self._messages):
+        del self._messages[str(msgid)]
 
   def _mqttcb(self, topic, msg):
     # NOOP
@@ -643,37 +656,36 @@ class Device:
     token = 'SharedAccessSignature sr={}&sig={}&se={}'.format(uri, signature, token_expiry)
     return token
 
-  def _sendCommon(self, topic, data):
+  def _sendCommon(self, topic, data, noEvent = None):
     if mqtt != None:
       (result, msg_id) = self._mqtts.publish(topic, data)
       if result != mqtt.MQTT_ERR_SUCCESS:
         LOG_IOTC("ERROR: (sendTelemetry) failed to send. MQTT client return value: " + str(result) + "")
         return 1
-      self._messages[str(msg_id)] = data
     else:
       self._mqtts.publish(topic, data)
       msg_id = 0
+      self._messages[str(msg_id)] = None
+
+    if noEvent == None:
       self._messages[str(msg_id)] = data
-      self._onPublish(None, topic, msg_id)
+      if mqtt == None:
+        self._onPublish(None, topic, msg_id)
 
     return 0
 
-  def enableMessageTimestamp(self, isEnabled):
-    self._addMessageTimeStamp = isEnabled
-    return 0
-
-  def sendTelemetry(self, data):
+  def sendTelemetry(self, data, systemProperties = None):
     LOG_IOTC("- iotc :: sendTelemetry :: " + data, IOTLogLevel.IOTC_LOGGING_ALL)
     topic = 'devices/{}/messages/events/'.format(self._deviceId)
 
-    if self._addMessageTimeStamp:
-      try:
-        obj = json.loads(data)
-      except:
-        LOG_IOTC("ERROR: sendTelemetry expects a valid JSON", IOTLogLevel.IOTC_LOGGING_ALL)
-        return 1
-      obj['iothub-creation-time-utc'] = time.time()
-      data = json.dumps(obj)
+    if systemProperties != None:
+      firstProp = True
+      for prop in systemProperties:
+        if not firstProp:
+          topic += "&"
+        else:
+          firstProp = False
+        topic += prop + '=' + str(systemProperties[prop])
 
     return self._sendCommon(topic, data)
 

@@ -46,6 +46,9 @@ iotc.egg-info
 python/build
 python/dist
 
+*.pem
+certgen.config.json
+
 .DS_Store
 c_cpp/examples/esp8266_arduino/src/
 c_cpp/examples/mkr1000/src/

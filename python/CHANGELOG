@@ -30,3 +30,15 @@
 ### 0.2.2
 
 - fix documentation typos and add docs for modelData ++ enable it
+
+### 0.2.3
+
+- force device settings to be delivered on start
+- enable 'setModelData'
+- new 'getDeviceSettings' method to request device settings at any given time
+
+### 0.3.1
+
+- new `sendTelemetry` interface for system property support. see README
+- update to 'SettingsUpdated' logic. Now individual setting values include '$version'
+- new 'setExitOnError' interface provides an option to enable exiting from app on mqtt layer issues.
