@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 # Licensed under the MIT license.
 
-__version__ = "0.3.1"
+__version__ = "0.3.2"
 __name__    = "iotc"
 
 import sys
@@ -211,7 +211,6 @@ class IOTMessageStatus:
   IOTC_MESSAGE_ABANDONED = 4
 
 gLOG_LEVEL = IOTLogLevel.IOTC_LOGGING_DISABLED
-gEXPIRES = 21600 # 6 hours
 
 def LOG_IOTC(msg, level=IOTLogLevel.IOTC_LOGGING_API_ONLY):
   global gLOG_LEVEL
@@ -305,6 +304,7 @@ class Device:
     self._certfile = None
     self._addMessageTimeStamp = False
     self._exitOnError = False
+    self._tokenExpires = 21600
     self._events = {
       "MessageSent": None,
       "ConnectionStatus": None,
@@ -317,6 +317,10 @@ class Device:
     else:
       self._keyfile = keyORCert["keyfile"]
       self._certfile = keyORCert["certfile"]
+
+  def setTokenExpiration(self, totalSeconds):
+    self._tokenExpires = totalSeconds
+    return 0
 
   def setExitOnError(self, isEnabled):
     self._exitOnError = isEnabled
@@ -535,6 +539,9 @@ class Device:
       LOG_IOTC("on(disconnect) : Not authorized")
       self.disconnect()
 
+    if rc == 1:
+      self._mqttConnected = False
+
     MAKE_CALLBACK(self, "ConnectionStatus", userdata, "", rc)
 
   def _onPublish(self, client, data, msgid):
@@ -597,9 +604,8 @@ class Device:
     return self._sendCommon("$iothub/twin/GET/?$rid=0", " ")
 
   def connect(self):
-    global gEXPIRES
     LOG_IOTC("- iotc :: connect :: ", IOTLogLevel.IOTC_LOGGING_ALL)
-    expires = int(time.time() + gEXPIRES)
+    expires = int(time.time() + self._tokenExpires)
 
     authString = None
 
@@ -646,8 +652,7 @@ class Device:
       return self._loopAssign(data['operationId'], headers)
 
   def _gen_sas_token(self, hub_host, device_name, key):
-    global gEXPIRES
-    token_expiry = int(time.time() + gEXPIRES)
+    token_expiry = int(time.time() + self._tokenExpires)
     uri = hub_host + "%2Fdevices%2F" + device_name
     signed_hmac_sha256 = self._computeDrivedSymmetricKey(key, uri + "\n" + str(token_expiry))
     signature = _quote(signed_hmac_sha256, '~()*!.\'')

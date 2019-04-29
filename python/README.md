@@ -79,6 +79,16 @@ device.setModelData(modelJSON)
 
 *i.e.* => `device.setModelData({"iotcModelId":"PUT_MODEL_ID_HERE"})`
 
+#### setTokenExpiration
+set the token expiration timeout. default is 21600 seconds (6 hours)
+```
+device.setTokenExpiration(totalSeconds)
+```
+
+*totalSeconds*  : timeout in seconds.
+
+*i.e.* => `device.setTokenExpiration(600)`
+
 #### setServiceHost
 set the service endpoint URL
 ```

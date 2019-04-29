@@ -42,3 +42,8 @@
 - new `sendTelemetry` interface for system property support. see README
 - update to 'SettingsUpdated' logic. Now individual setting values include '$version'
 - new 'setExitOnError' interface provides an option to enable exiting from app on mqtt layer issues.
+
+### 0.3.2
+
+- change isConnected status to false if mqtt rc == 1
+- new `setTokenExpiration` interface for manually defining token expiration time
