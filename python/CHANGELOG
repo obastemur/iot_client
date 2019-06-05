@@ -47,3 +47,8 @@
 
 - change isConnected status to false if mqtt rc == 1
 - new `setTokenExpiration` interface for manually defining token expiration time
+
+### 0.3.3
+
+- add `getHostName` API
+- extend `connect()` with an optional `hostName` arg. => `connect(hostName)`

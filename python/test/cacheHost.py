@@ -7,7 +7,7 @@ import hashlib
 import hmac
 import base64
 
-file_path = __file__[:len(__file__) - len("basics.py")]
+file_path = __file__[:len(__file__) - len("cacheHost.py")]
 # Update /usr/local/lib/python2.7/site-packages/iotc/__init__.py ?
 if 'dont_write_bytecode' in dir(sys):
   import os
@@ -54,6 +54,8 @@ config = json.loads(configText)
 assert config["scopeId"] != None and config["masterKey"] != None and config["hostName"] != None
 
 testCounter = 0
+eventRaised = False
+device = None
 
 def compute_key(secret, regId):
   global gIsMicroPython
@@ -70,6 +72,8 @@ def compute_key(secret, regId):
 
 def test_lifetime():
   global testCounter
+  global device
+  global eventRaised
   if config["TEST_ID"] == 2:
     keyORcert = config["cert"]
   else:
@@ -80,55 +84,37 @@ def test_lifetime():
     assert device.setModelData(config["modelData"]) == 0
 
   device.setExitOnError(True)
+  hostName = None
 
   def onconnect(info):
     global testCounter
-    if device.isConnected():
-      assert info.getStatusCode() == 0
-      testCounter += 1
-      assert device.sendTelemetry("{\"temp\":22}", {"iothub-creation-time-utc": time.time()}) == 0
-      testCounter += 1
-      assert device.sendProperty("{\"dieNumber\":3}") == 0
-    else:
-      print ("- ", "done")
-
-  def onmessagesent(info):
-    global testCounter
-    print ("onmessagesent", info.getTag(), info.getPayload())
-    testCounter += 1
-
-  def oncommand(info):
-    global testCounter
-
-    print("oncommand", info.getTag(), info.getPayload())
-    assert info.getTag() == "echo" or info.getTag() == "countdown"
-    testCounter += 1
-
-  allSettings = {}
-
-  def onsettingsupdated(info):
-    global testCounter
-    testCounter += 1
-    assert '$version' in json.loads(info.getPayload()) # each setting has a version
-    allSettings[info.getTag()] = True
-    print("onsettingsupdated", info.getTag(), info.getPayload())
+    global eventRaised
+    print "PASS = " + str(testCounter)
+    if testCounter < 2:
+      eventRaised = True
+    testCounter = testCounter + 1
 
   assert device.on("ConnectionStatus", onconnect) == 0
-  assert device.on("MessageSent", onmessagesent) == 0
-  assert device.on("Command", oncommand) == 0
-  assert device.on("SettingsUpdated", onsettingsupdated) == 0
-
-  assert device.setLogLevel(IOTLogLevel.IOTC_LOGGING_ALL) == 0
-
+  # assert device.setLogLevel(IOTLogLevel.IOTC_LOGGING_ALL) == 0
   assert device.setDPSEndpoint(config["hostName"]) == 0
   assert device.connect() == 0
+  hostName = device.getHostName()
 
   showCommandWarning = False
-  MAX_EXPECTED_TEST_COUNTER = 11
-  while device.isConnected() and testCounter < MAX_EXPECTED_TEST_COUNTER:
-    if showCommandWarning == False and testCounter >= MAX_EXPECTED_TEST_COUNTER - 2:
-      showCommandWarning = True
-      print("now, send a command from central")
+  MAX_EXPECTED_TEST_COUNTER = 3
+  while testCounter < MAX_EXPECTED_TEST_COUNTER:
+    if eventRaised == True:
+      eventRaised = False
+      if testCounter == 1:
+        print "DISCONNECTS"
+        assert device.disconnect() == 0
+      else:
+        print "CONNECTS"
+        device = iotc.Device(config["scopeId"], keyORcert, "dev1", config["TEST_ID"]) # 1 / 2 (symm / x509)
+        assert device.on("ConnectionStatus", onconnect) == 0
+        # assert device.setLogLevel(IOTLogLevel.IOTC_LOGGING_ALL) == 0
+        assert device.setDPSEndpoint(config["hostName"]) == 0
+        device.connect(hostName)
 
     device.doNext()
 

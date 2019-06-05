@@ -106,6 +106,12 @@ connect device client  `# blocking`. Raises `ConnectionStatus` event.
 device.connect()
 ```
 
+or
+
+```
+device.connect(hostName)
+```
+
 *i.e.* => `device.connect()`
 
 #### sendTelemetry
@@ -178,6 +184,15 @@ device.getDeviceSettings()
 ```
 
 *i.e.* => `device.getDeviceSettings()`
+
+#### getHostName
+returns the iothub hostname cached during the initial connection.
+
+```
+device.getHostName()
+```
+
+*i.e.* => `device.getDeviceHostName()`
 
 #### on
 set event callback to listen events

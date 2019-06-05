@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 # Licensed under the MIT license.
 
-__version__ = "0.3.2"
+__version__ = "0.3.3"
 __name__    = "iotc"
 
 import sys
@@ -226,7 +226,7 @@ def MAKE_CALLBACK(client, eventName, payload, tag, status, msgid = None):
   except:
     obj = client._events
 
-  if obj[eventName] != None:
+  if obj != None and (eventName in obj) and obj[eventName] != None:
     cb = IOTCallbackInfo(client, eventName, payload, tag, status, msgid)
     obj[eventName](cb)
     return cb
@@ -402,8 +402,8 @@ class Device:
           return 1
       elif data['status'] == "assigned":
         state = data['registrationState']
-        hostName = state['assignedHub']
-        return self._mqttConnect(None, hostName)
+        self._hostName = state['assignedHub']
+        return self._mqttConnect(None, self._hostName)
     else:
       data = str(data)
 
@@ -542,7 +542,8 @@ class Device:
     if rc == 1:
       self._mqttConnected = False
 
-    MAKE_CALLBACK(self, "ConnectionStatus", userdata, "", rc)
+    if rc != 5:
+      MAKE_CALLBACK(self, "ConnectionStatus", userdata, "", rc)
 
   def _onPublish(self, client, data, msgid):
     LOG_IOTC("- iotc :: _onPublish :: " + str(data), IOTLogLevel.IOTC_LOGGING_ALL)
@@ -603,10 +604,17 @@ class Device:
     self.doNext()
     return self._sendCommon("$iothub/twin/GET/?$rid=0", " ")
 
-  def connect(self):
-    LOG_IOTC("- iotc :: connect :: ", IOTLogLevel.IOTC_LOGGING_ALL)
-    expires = int(time.time() + self._tokenExpires)
+  def getHostName(self):
+    return self._hostName
 
+  def connect(self, hostName = None):
+    LOG_IOTC("- iotc :: connect :: ", IOTLogLevel.IOTC_LOGGING_ALL)
+
+    if hostName != None:
+      self._hostName = hostName
+      return self._mqttConnect(None, self._hostName)
+
+    expires = int(time.time() + self._tokenExpires)
     authString = None
 
     if self._credType == IOTConnectType.IOTC_CONNECT_SYMM_KEY:
