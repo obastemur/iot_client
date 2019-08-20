@@ -23,9 +23,9 @@ class PT():
     def start(self):
         self.thread.start()
 
-deviceId = "python-iotc"
-scopeId = "0ne00047B61"
-deviceKey = "BcZ8GwqRxQpf+VjSFVTVKB6Rg08n/1/tWYESbosC2Ck="
+deviceId = "<Add device Id here>"
+scopeId = "<Add scope Id here>"
+deviceKey = "<Add device Key here>"
 
 # see iotc.Device documentation above for x509 argument sample
 iotc = iotc.Device(scopeId, deviceKey, deviceId, IOTConnectType.IOTC_CONNECT_SYMM_KEY)

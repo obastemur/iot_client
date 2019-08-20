@@ -99,7 +99,7 @@ device.setServiceHost(url)
 
 *call this before connect*
 
-##### setQosLevel
+#### setQosLevel
 Set the MQTT Quality of Service (QoS) level desired for all MQTT publish calls
 ```
 device.setQosLevel(qosLevel)
@@ -289,6 +289,7 @@ deviceKey = "DEVICE_KEY"
 # see iotc.Device documentation above for x509 argument sample
 iotc = iotc.Device(scopeId, deviceKey, deviceId, IOTConnectType.IOTC_CONNECT_SYMM_KEY)
 iotc.setLogLevel(IOTLogLevel.IOTC_LOGGING_API_ONLY)
+iotc.setQosLevel(IOTQosLevel.IOTC_QOS_AT_MOST_ONCE)
 
 gCanSend = False
 gCounter = 0
