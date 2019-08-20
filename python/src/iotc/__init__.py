@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 # Licensed under the MIT license.
 
-__version__ = "0.3.3"
+__version__ = "0.3.4"
 __name__    = "iotc"
 
 import sys
@@ -196,6 +196,10 @@ class IOTLogLevel:
   IOTC_LOGGING_API_ONLY =  2
   IOTC_LOGGING_ALL      = 16
 
+class IOTQosLevel:
+  IOTC_QOS_AT_MOST_ONCE  = 0
+  IOTC_QOS_AT_LEAST_ONCE = 1
+
 class IOTConnectionState:
   IOTC_CONNECTION_EXPIRED_SAS_TOKEN    =  1
   IOTC_CONNECTION_DEVICE_DISABLED      =  2
@@ -211,6 +215,7 @@ class IOTMessageStatus:
   IOTC_MESSAGE_ABANDONED = 4
 
 gLOG_LEVEL = IOTLogLevel.IOTC_LOGGING_DISABLED
+gQOS_LEVEL = IOTQosLevel.IOTC_QOS_AT_MOST_ONCE # default is set to QoS 0 "At most once" IoT hub also supports QoS 1 "At least once"
 
 def LOG_IOTC(msg, level=IOTLogLevel.IOTC_LOGGING_API_ONLY):
   global gLOG_LEVEL
@@ -359,6 +364,14 @@ class Device:
       LOG_IOTC("ERROR: (setLogLevel) invalid argument.")
       return 1
     gLOG_LEVEL = logLevel
+    return 0
+
+  def setQosLevel(self, qosLevel):
+    global gQOS_LEVEL
+    if qosLevel < IOTQosLevel.IOTC_QOS_AT_MOST_ONCE or qosLevel > IOTQosLevel.IOTC_QOS_AT_LEAST_ONCE:
+      LOG_IOTC("ERROR: Only QOS level 0 (at most once) or 1 (at least once) is supported by IoT Hub")
+      return 1
+    gQOS_LEVEL = qosLevel
     return 0
 
   def _computeDrivedSymmetricKey(self, secret, regId):
@@ -513,7 +526,7 @@ class Device:
 
         next_topic = '$iothub/methods/res/{}/?$rid={}'.format(ret_code, method_id)
         LOG_IOTC("C2D: => " + next_topic + " with data " + ret_message  + " and name => " + method_name, IOTLogLevel.IOTC_LOGGING_ALL)
-        (result, msg_id) = self._mqtts.publish(next_topic, ret_message, qos=0)
+        (result, msg_id) = self._mqtts.publish(next_topic, ret_message, qos=gQOS_LEVEL)
         if result != MQTT_SUCCESS:
           LOG_IOTC("ERROR: (send method callback) failed to send. MQTT client return value: " + str(result))
       else:
@@ -671,12 +684,12 @@ class Device:
 
   def _sendCommon(self, topic, data, noEvent = None):
     if mqtt != None:
-      (result, msg_id) = self._mqtts.publish(topic, data)
+      (result, msg_id) = self._mqtts.publish(topic, data, qos=gQOS_LEVEL)
       if result != mqtt.MQTT_ERR_SUCCESS:
         LOG_IOTC("ERROR: (sendTelemetry) failed to send. MQTT client return value: " + str(result) + "")
         return 1
     else:
-      self._mqtts.publish(topic, data)
+      self._mqtts.publish(topic, data, qos=gQOS_LEVEL)
       msg_id = 0
       self._messages[str(msg_id)] = None
 
