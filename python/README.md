@@ -114,16 +114,6 @@ class IOTQosLevel:
 
 Note: IOTC_QOS_AT_LEAST_ONCE will have slower performance than IOTC_QOS_AT_MOST_ONCE as the MQTT client must store the value for possible replay and also wait for an acknowledgement from the IoT Hub that the MQTT message has been received.  Think of IOTC_QOS_AT_MOST_ONCE as "fire and forget" vs. IOTC_QOS_AT_LEAST_ONCE as "guaranteed delivery".  As the developer you should consider the importance of 100% data delivery vs. increased connection time and data traffic over the data connection.
 
-i.e.
-```
-device.setModelData({
-   "__iot:interfaces": {
-      "CapabilityModelUri": "http://example.com/Amqp/1.0.0",
-      "ModelRepositoryUri": "https://iotpnptest.azurewebsites.net"
-    }
-  })
-```
-
 *call this before connect*
 
 #### connect
