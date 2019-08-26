@@ -99,6 +99,23 @@ device.setServiceHost(url)
 
 *call this before connect*
 
+#### setQosLevel
+Set the MQTT Quality of Service (QoS) level desired for all MQTT publish calls
+```
+device.setQosLevel(qosLevel)
+```
+
+*qosLevel*   : (default value is `IOTC_QOS_AT_MOST_ONCE`)
+```
+class IOTQosLevel:
+  IOTC_QOS_AT_MOST_ONCE  = 0
+  IOTC_QOS_AT_LEAST_ONCE = 1
+```
+
+Note: IOTC_QOS_AT_LEAST_ONCE will have slower performance than IOTC_QOS_AT_MOST_ONCE as the MQTT client must store the value for possible replay and also wait for an acknowledgement from the IoT Hub that the MQTT message has been received.  Think of IOTC_QOS_AT_MOST_ONCE as "fire and forget" vs. IOTC_QOS_AT_LEAST_ONCE as "guaranteed delivery".  As the developer you should consider the importance of 100% data delivery vs. increased connection time and data traffic over the data connection.
+
+*call this before connect*
+
 #### connect
 connect device client  `# blocking`. Raises `ConnectionStatus` event.
 
@@ -272,6 +289,7 @@ deviceKey = "DEVICE_KEY"
 # see iotc.Device documentation above for x509 argument sample
 iotc = iotc.Device(scopeId, deviceKey, deviceId, IOTConnectType.IOTC_CONNECT_SYMM_KEY)
 iotc.setLogLevel(IOTLogLevel.IOTC_LOGGING_API_ONLY)
+iotc.setQosLevel(IOTQosLevel.IOTC_QOS_AT_MOST_ONCE)
 
 gCanSend = False
 gCounter = 0
