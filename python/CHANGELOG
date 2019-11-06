@@ -52,3 +52,11 @@
 
 - add `getHostName` API
 - extend `connect()` with an optional `hostName` arg. => `connect(hostName)`
+
+### 0.3.4
+
+- adding support for changing the QoS value of MQTT publishing events (firedog1024)
+
+### 0.3.5
+
+- fix spacing issue with httplib (lucadruda)
