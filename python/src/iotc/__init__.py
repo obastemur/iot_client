@@ -256,22 +256,18 @@ def _get_cert_path():
 def _doRequest(device, target_url, method, body, headers):
   conn = http.HTTPSConnection(device._dpsEndPoint, '443', cert_file=device._certfile, key_file=device._keyfile)
 
-  header_string = "content-type: " + headers["content-type"] + "\r\n"
-  header_string += "user-agent: " + headers["user-agent"] + "\r\n"
-  header_string += "accept: " + headers["Accept"] + "\r\n"
-  header_string += "accept-encoding: gzip, deflate\r\n"
+  req_headers = {"Content-Type": headers["content-type"],
+                   "User-Agent": headers["user-agent"],
+                   "Accept": headers["Accept"],
+                   "Accept-Encoding": "gzip, deflate"}
 
   if "authorization" in headers:
-    header_string += "authorization: " + headers["authorization"] + "\r\n"
+    req_headers["authorization"] = headers["authorization"]
 
   if body != None:
-    header_string += "Content-Length: " + str(len(body)) + "\r\n"
-    header_string += "\r\n" + body
-  else:
-    header_string += "\r\n"
+    req_headers["Content-Length"] = str(len(body))
 
-  socket_buffer = target_url + " HTTP/1.1\r\nHost: " +  device._dpsEndPoint + "\r\n" + header_string
-  conn.request(method, socket_buffer)
+  conn.request(method, target_url, body, req_headers)
 
   response = conn.getresponse()
   return response.read()
