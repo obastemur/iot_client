@@ -278,9 +278,10 @@ public members of `IOTCallbackInfo` are;
 
 #### sample app
 
-```
+```py
 import iotc
 from iotc import IOTConnectType, IOTLogLevel
+from random import randint
 
 deviceId = "DEVICE_ID"
 scopeId = "SCOPE_ID"
@@ -300,6 +301,9 @@ def onconnect(info):
   if info.getStatusCode() == 0:
      if iotc.isConnected():
        gCanSend = True
+  elif info.getStatusCode() == 5: # token expired. force reconnection
+       gCanSend = False
+       iotc.connect()
 
 def onmessagesent(info):
   print("\t- [onmessagesent] => " + str(info.getPayload()))
