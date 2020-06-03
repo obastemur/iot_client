@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 # Licensed under the MIT license.
 
-__version__ = "0.3.5"
+__version__ = "0.3.6"
 __name__    = "iotc"
 
 import sys
@@ -422,6 +422,7 @@ class Device:
     LOG_IOTC("- iotc :: _onConnect :: rc = " + str(rc), IOTLogLevel.IOTC_LOGGING_ALL)
     if rc == 0:
       self._mqttConnected = True
+      MAKE_CALLBACK(self, "ConnectionStatus", userdata, "", rc)
     self._auth_response_received = True
 
   def _echoDesired(self, msg, topic):
@@ -551,7 +552,6 @@ class Device:
     if rc == 1:
       self._mqttConnected = False
 
-    if rc != 5:
       MAKE_CALLBACK(self, "ConnectionStatus", userdata, "", rc)
 
   def _onPublish(self, client, data, msgid):
