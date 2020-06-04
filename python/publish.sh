@@ -1,5 +1,6 @@
 #!/bin/bash
-
+shopt -s expand_aliases
+source ~/.bashrc
 rm -rf build/ dist/ src/iotc/iotc_device.egg-info src/iotc/_pycache_ src/iotc/_init_.pyc
 
 TEST=""

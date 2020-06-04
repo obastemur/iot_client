@@ -70,3 +70,9 @@
 - adding C2D message support. Fires on the 'Command' event.
 - adding clean session support. setCleanSession(enable) with True or False. 
   A False value disables clean session and allows to receive C2D messages enqueued while device was disconnected.
+
+### 0.3.8
+- fix unauthorized callbacks
+
+### 0.3.9
+- fix C2D payload callback

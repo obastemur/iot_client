@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 # Licensed under the MIT license.
 
-__version__ = "0.3.7"
+__version__ = "0.3.9"
 __name__    = "iotc"
 
 import sys
@@ -312,7 +312,8 @@ class Device:
       "MessageSent": None,
       "ConnectionStatus": None,
       "Command": None,
-      "SettingUpdated": None
+      "SettingUpdated": None,
+      "EnqueuedCommand":None
     }
 
     if credType == IOTConnectType.IOTC_CONNECT_SYMM_KEY:
@@ -507,12 +508,12 @@ class Device:
       #
       if topic.startswith('$iothub/twin/PATCH/properties/desired/') or topic.startswith('$iothub/twin/res/200/?$rid='): # twin desired property change
         self._echoDesired(msg, topic)
-      elif topic.startswith('$iothub/methods'): # C2D
+      elif topic.startswith('$iothub/methods'): # Direct method
         index = topic.find("$rid=")
         method_id = 1
         method_name = "None"
         if index == -1:
-          LOG_IOTC("ERROR: C2D doesn't include topic id")
+          LOG_IOTC("ERROR: Command doesn't include topic id")
         else:
           method_id = topic[index + 5:]
           topic_template = "$iothub/methods/POST/"
@@ -535,8 +536,11 @@ class Device:
       else:
         if not topic.startswith('$iothub/twin/res/'): # not twin response
           LOG_IOTC('ERROR: unknown twin! {} - {}'.format(topic, msg))
-    elif topic.startswith('devices/{}/messages/devicebound'.format(self._deviceId)):
+    elif topic.startswith('devices/{}/messages/devicebound'.format(self._deviceId)): # C2D offline message
       LOG_IOTC('C2D Offline message: {} - {}'.format(topic, msg))
+      data=json.loads(msg)
+      method_name=data['methodName']
+      ret = MAKE_CALLBACK(self, "EnqueuedCommand", msg, method_name, 0)
     else:
       LOG_IOTC('ERROR: unknown message: {} - {}'.format(topic, msg))
 
@@ -560,7 +564,7 @@ class Device:
     if rc == 1:
       self._mqttConnected = False
 
-      MAKE_CALLBACK(self, "ConnectionStatus", userdata, "", rc)
+    MAKE_CALLBACK(self, "ConnectionStatus", userdata, "", rc)
 
   def _onPublish(self, client, data, msgid):
     LOG_IOTC("- iotc :: _onPublish :: " + str(data), IOTLogLevel.IOTC_LOGGING_ALL)
