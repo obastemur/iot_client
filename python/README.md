@@ -9,7 +9,7 @@ Python 2.7+ or Python 3.4+ or Micropython 1.9+
 ### Install
 
 Python 2/3
-```
+```shell
 pip install iotc
 ```
 
@@ -20,7 +20,7 @@ pip install iotc
 
 ### Usage
 
-```
+```py
 import iotc
 device = iotc.Device(scopeId, keyORCert, deviceId, credType)
 ```
@@ -31,7 +31,7 @@ device = iotc.Device(scopeId, keyORCert, deviceId, credType)
 - *credType*   : `IOTConnectType.IOTC_CONNECT_SYMM_KEY` or `IOTConnectType.IOTC_CONNECT_X509_CERT`
 
 `keyORcert` for `X509` certificate:
-```
+```py
 credType = IOTConnectType.IOTC_CONNECT_X509_CERT
 keyORcert = {
   "keyfile": "/src/python/test/device.key.pem",
@@ -40,19 +40,19 @@ keyORcert = {
 ```
 
 `keyORcert` for `SAS` token:
-```
+```py
 credType = IOTConnectType.IOTC_CONNECT_SYMM_KEY
 keyORcert = "xxxxxxxxxxxxxxx........"
 ```
 
 #### setLogLevel
 set logging level
-```
+```py
 device.setLogLevel(logLevel)
 ```
 
 *logLevel*   : (default value is `IOTC_LOGGING_DISABLED`)
-```
+```py
 class IOTLogLevel:
   IOTC_LOGGING_DISABLED =  1
   IOTC_LOGGING_API_ONLY =  2
@@ -63,7 +63,7 @@ class IOTLogLevel:
 
 #### setExitOnError
 enable/disable application termination on mqtt later exceptions. (default false)
-```
+```py
 device.setExitOnError(isEnabled)
 ```
 
@@ -71,7 +71,7 @@ device.setExitOnError(isEnabled)
 
 #### setModelData
 set the device model data (if any)
-```
+```py
 device.setModelData(modelJSON)
 ```
 
@@ -81,7 +81,7 @@ device.setModelData(modelJSON)
 
 #### setTokenExpiration
 set the token expiration timeout. default is 21600 seconds (6 hours)
-```
+```py
 device.setTokenExpiration(totalSeconds)
 ```
 
@@ -91,7 +91,7 @@ device.setTokenExpiration(totalSeconds)
 
 #### setServiceHost
 set the service endpoint URL
-```
+```py
 device.setServiceHost(url)
 ```
 
@@ -101,12 +101,12 @@ device.setServiceHost(url)
 
 #### setQosLevel
 Set the MQTT Quality of Service (QoS) level desired for all MQTT publish calls
-```
+```py
 device.setQosLevel(qosLevel)
 ```
 
 *qosLevel*   : (default value is `IOTC_QOS_AT_MOST_ONCE`)
-```
+```py
 class IOTQosLevel:
   IOTC_QOS_AT_MOST_ONCE  = 0
   IOTC_QOS_AT_LEAST_ONCE = 1
@@ -116,16 +116,26 @@ Note: IOTC_QOS_AT_LEAST_ONCE will have slower performance than IOTC_QOS_AT_MOST_
 
 *call this before connect*
 
+#### setCleanSession
+set the clean session flag of the mqtt client
+```py
+device.setCleanSession(value)
+```
+
+*value*   : boolean flag to enable or disable clean session (default is True)
+
+*call this before connect*
+
 #### connect
 connect device client  `# blocking`. Raises `ConnectionStatus` event.
 
-```
+```py
 device.connect()
 ```
 
 or
 
-```
+```py
 device.connect(hostName)
 ```
 
@@ -134,7 +144,7 @@ device.connect(hostName)
 #### sendTelemetry
 send telemetry
 
-```
+```py
 device.sendTelemetry(payload, [[optional system properties]])
 ```
 
@@ -149,7 +159,7 @@ You may also set system properties for the telemetry message. See also [iothub m
 #### sendState
 send device state
 
-```
+```py
 device.sendState(payload)
 ```
 
@@ -160,7 +170,7 @@ device.sendState(payload)
 #### sendProperty
 send reported property
 
-```
+```py
 device.sendProperty(payload)
 ```
 
@@ -171,14 +181,14 @@ device.sendProperty(payload)
 #### doNext
 let framework do the partial MQTT work.
 
-```
+```py
 device.doNext()
 ```
 
 #### isConnected
 returns whether the connection was established or not.
 
-```
+```py
 device.isConnected()
 ```
 
@@ -187,7 +197,7 @@ device.isConnected()
 #### disconnect
 disconnect device client
 
-```
+```py
 device.disconnect()
 ```
 
@@ -196,7 +206,7 @@ device.disconnect()
 #### getDeviceSettings
 pulls latest twin data (device properties). Raises `SettingsUpdated` event.
 
-```
+```py
 device.getDeviceSettings()
 ```
 
@@ -205,7 +215,7 @@ device.getDeviceSettings()
 #### getHostName
 returns the iothub hostname cached during the initial connection.
 
-```
+```py
 device.getHostName()
 ```
 
@@ -220,7 +230,7 @@ set event callback to listen events
 - `SettingsUpdated`  : device settings were updated
 
 i.e.
-```
+```py
 def onconnect(info):
   if info.getStatusCode() == 0:
     print("connected!")
@@ -228,14 +238,14 @@ def onconnect(info):
 device.on("ConnectionStatus", onconnect)
 ```
 
-```
+```py
 def onmessagesent(info):
   print("message sent -> " + info.getPayload())
 
 device.on("MessageSent", onmessagesent)
 ```
 
-```
+```py
 def oncommand(info):
   print("command name:", info.getTag())
   print("command args: ", info.getPayload())
@@ -243,7 +253,7 @@ def oncommand(info):
 device.on("Command", oncommand)
 ```
 
-```
+```py
 def onsettingsupdated(info):
   print("setting name:", info.getTag())
   print("setting value: ", info.getPayload())
