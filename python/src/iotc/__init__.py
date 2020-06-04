@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 # Licensed under the MIT license.
 
-__version__ = "0.3.6"
+__version__ = "0.3.7"
 __name__    = "iotc"
 
 import sys
@@ -110,7 +110,8 @@ except ImportError:
 
 def _createMQTTClient(__self, username, passwd):
   if mqtt != None:
-    __self._mqtts = mqtt.Client(client_id=__self._deviceId, protocol=mqtt.MQTTv311)
+    LOG_IOTC('Clean session enabled: {}'.format(__self._cleanSession),IOTLogLevel.IOTC_LOGGING_ALL)
+    __self._mqtts = mqtt.Client(client_id=__self._deviceId, protocol=mqtt.MQTTv311,clean_session=__self._cleanSession)
     __self._mqtts.on_connect = __self._onConnect
     __self._mqtts.on_message = __self._onMessage
     __self._mqtts.on_log = __self._onLog
@@ -304,6 +305,7 @@ class Device:
     self._keyfile = None
     self._certfile = None
     self._addMessageTimeStamp = False
+    self._cleanSession = True
     self._exitOnError = False
     self._tokenExpires = 21600
     self._events = {
@@ -325,6 +327,10 @@ class Device:
 
   def setExitOnError(self, isEnabled):
     self._exitOnError = isEnabled
+    return 0
+
+  def setCleanSession(self, isEnabled):
+    self._cleanSession = isEnabled
     return 0
 
   def setSSLVerification(self, isEnabled):
@@ -529,8 +535,10 @@ class Device:
       else:
         if not topic.startswith('$iothub/twin/res/'): # not twin response
           LOG_IOTC('ERROR: unknown twin! {} - {}'.format(topic, msg))
+    elif topic.startswith('devices/{}/messages/devicebound'.format(self._deviceId)):
+      LOG_IOTC('C2D Offline message: {} - {}'.format(topic, msg))
     else:
-      LOG_IOTC('ERROR: (unknown message) {} - {}'.format(topic, msg))
+      LOG_IOTC('ERROR: unknown message: {} - {}'.format(topic, msg))
 
   def _onLog(self, client, userdata, level, buf):
     global gLOG_LEVEL
@@ -596,7 +604,7 @@ class Device:
       self._auth_response_received = True
 
     self._mqtts.subscribe('devices/{}/messages/events/#'.format(self._deviceId))
-    self._mqtts.subscribe('devices/{}/messages/deviceBound/#'.format(self._deviceId))
+    self._mqtts.subscribe('devices/{}/messages/devicebound/#'.format(self._deviceId))
     self._mqtts.subscribe('$iothub/twin/PATCH/properties/desired/#') # twin desired property changes
     self._mqtts.subscribe('$iothub/twin/res/#') # twin properties response
     self._mqtts.subscribe('$iothub/methods/#')

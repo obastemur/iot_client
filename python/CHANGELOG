@@ -64,3 +64,9 @@
 ### 0.3.6
 
 - raise "ConnectionStatus" change event for any disconnection cause (including token expiration)
+
+### 0.3.7
+
+- adding C2D message support. Fires on the 'Command' event.
+- adding clean session support. setCleanSession(enable) with True or False. 
+  A False value disables clean session and allows to receive C2D messages enqueued while device was disconnected.
